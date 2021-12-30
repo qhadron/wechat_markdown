@@ -1,0 +1,13 @@
+{
+  "name": "wechat_markdown",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Jack Li <jack.lee2980@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+	  "dev": "reload -b"
+  },
+  "devDependencies": {
+    "reload": "^3.2.0"
+  }
+}
