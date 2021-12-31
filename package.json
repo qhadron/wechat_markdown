@@ -9,6 +9,7 @@
 		"clean": "rm -rf ./dist",
 		"build": "node ./build.js",
 		"build-dev": "ENV=dev node ./build.js",
+		"build-watch": "ENV=dev node ./build.js --watch",
 		"predist": "yarn run clean && yarn run build",
 		"dist": "tar -C ./dist -czvf dist.tar.gz ."
 	},
