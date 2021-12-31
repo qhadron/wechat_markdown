@@ -1,24 +1,26 @@
 {
-  "name": "wechat_markdown",
-  "version": "1.0.0",
-  "main": "index.js",
-  "author": "Jack Li <jack.lee2980@gmail.com>",
-  "license": "MIT",
-  "scripts": {
-    "dev": "cd ./dist && python -m http.server --bind localhost ${PORT:-8000}",
-    "clean": "rm -rf ./dist",
-    "build": "node ./build.js",
-    "build-dev": "ENV=dev node ./build.js"
-  },
-  "devDependencies": {
-    "@chialab/esbuild-plugin-html": "^0.14.10",
-    "@types/marked": "^4.0.1",
-    "esbuild": "^0.14.9",
-    "juice": "^8.0.0",
-    "marked": "^4.0.8",
-    "monaco-editor": "^0.31.1",
-    "reload": "^3.2.0"
-  },
-  "dependencies": {},
-  "type": "module"
+	"name": "wechat_markdown",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "Jack Li <jack.lee2980@gmail.com>",
+	"license": "MIT",
+	"scripts": {
+		"dev": "cd ./dist && python -m http.server --bind localhost ${PORT:-8000}",
+		"clean": "rm -rf ./dist",
+		"build": "node ./build.js",
+		"build-dev": "ENV=dev node ./build.js",
+		"predist": "yarn run clean && yarn run build",
+		"dist": "tar -C ./dist -czvf dist.tar.gz ."
+	},
+	"devDependencies": {
+		"@chialab/esbuild-plugin-html": "^0.14.10",
+		"@types/marked": "^4.0.1",
+		"esbuild": "^0.14.9",
+		"juice": "^8.0.0",
+		"marked": "^4.0.8",
+		"monaco-editor": "^0.31.1",
+		"reload": "^3.2.0"
+	},
+	"dependencies": {},
+	"type": "module"
 }
