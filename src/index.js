@@ -3,7 +3,8 @@ import * as monaco from 'monaco-editor';
 import * as Editor from './editor';
 import juice from 'juice';
 
-import exampleMarkdown from './example.md';
+import exampleMarkdown from './examples/example.md.txt';
+import exampleCss from './examples/example.css.txt';
 
 const $editor = Editor.create(document.querySelector('#editor'));
 const $style = Editor.create(document.querySelector('#style'));
@@ -17,13 +18,8 @@ $editor.onDidChangeModelContent(onSourceChanged);
 $editor.getModel().setValue(exampleMarkdown);
 
 $style.onDidChangeModelContent(onSourceChanged);
-$style.getModel().setValue(
-`
-h1 {
-	color: red;
-}
-p {
-	color: blue;
+$style.getModel().setValue(exampleCss);
+
 }
 `
 );
@@ -43,11 +39,3 @@ function onSourceChanged() {
 	$source.textContent = juice(style + $preview.contentDocument.body.innerHTML);
 	monaco.editor.colorizeElement($source);
 }
-
-// /**
-//  * @param $root {HTMLElement} root element
-//  * @param style {string} style
-//  */
-// function getStyledHtml($root, style) {
-// 	
-// }
