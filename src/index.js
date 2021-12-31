@@ -20,9 +20,20 @@ $editor.getModel().setValue(exampleMarkdown);
 $style.onDidChangeModelContent(onSourceChanged);
 $style.getModel().setValue(exampleCss);
 
+/**
+ * @param {HTMLElement} element
+ */
+function selectAll(element) {
+	const range = new Range();
+	range.setStart(element, 0);
+	range.setEnd(element, element.childElementCount);
+	document.getSelection().removeAllRanges();
+	document.getSelection().addRange(range);
 }
-`
-);
+
+$source.addEventListener('dblclick', () => {
+	selectAll($source);
+});
 
 function onSourceChanged() {
 	const source = $editor.getModel().getValue();
