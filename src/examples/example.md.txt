@@ -1,7 +1,49 @@
-<details>
+一个小方框用 `<section class="bg"></section>` 包围。`class="bg"`是他神奇力量的来源：css里对`.bg`有定义。
 
+<section class="bg">
+
+你好这是一段话~
+
+
+你好这是另一段话~
+:smile: :joy: 这里虽然换行了，但是还是一段话哦
+
+# title （这是标题）在开头多加几个#就会变小
+
+这是很长的一段话，换行要在最后加两个空格，像这样  
+This is some text that does something.  
+because it is something thatt is very good.
+This is a line of text that turns out to be very very long so it wraps over to the next line, even though it doesn't make a difference where the line ends in markdown, the HTML still wraps it, yay!
+</section>
+
+
+接下来的方框可以分成好几列：，每一个元素都是分开的一列。
+
+<section class="bg split">
+
+
+<section>
+这里面有好几句话，所以也要用section包围起来。这样他会被是为一个东西。
+
+试试把包围这段话的section去掉看看是什么效果~
+
+(改变每个东西出现的顺序会影响最终的位置。试试把下面的img切到这段话前面)
+
+Hi, this is a second block of text.
+
+it goes on for a little bit, with a long line oif text that still wraps properly :) This is the power of markdown.
+</section>
+
+<img src="https://c.tenor.com/5x-c2BNJq9QAAAAi/love-ily.gif"/>
+
+</section>
+
+
+
+- - -
+<details>
 <summary>
-Markdown Syntax
+Markdown 语法
 </summary>
 
 # h1 Heading 8-)

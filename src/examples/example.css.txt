@@ -1,6 +1,43 @@
-h1 {
-	color: red;
+.bg {
+    box-sizing: border-box;
+    background: linear-gradient(rgba(0,0,0,.1), rgba(0,0,0,.8)), url(https://c.tenor.com/mlgasdivOAEAAAAM/new-year.gif);
+    background-size: contain;
+    background-repeat: repeat;
+    border: solid .3em #444;
+    border-radius: 5px;
+    --width: 75%;
+    max-width: var(--width);
+    position: relative;
+    left: calc(calc(100% - var(--width)) / 2);
+    margin-bottom: 1em;
+    padding: .5em 2em;
+    --font-size: 1.2em;
+    font-size: var(--font-size);
+    font-family: Consolas, sans-serif;
+    line-height: calc(var(--font-size) * 1.15);
+    min-height: calc(var(--font-size) * 1.15 * 10);
 }
-p {
-	color: blue;
+
+.bg * {
+    color: #ddd;
+}
+
+.split {
+    display: flex;
+}
+
+.split > * {
+	flex-basis: 1;
+}
+
+.split > img {
+    width: 50%;
+}
+
+.split.row {
+    flex-direction: row;
+}
+
+.split.column {
+    flex-direction: column;
 }
