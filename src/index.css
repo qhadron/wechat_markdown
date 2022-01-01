@@ -16,8 +16,8 @@ main {
 	display: grid;
 
 	grid-template-areas: 
-		'editor preview'
-		'style source'
+		'editor output'
+		'style output'
 	;
 	grid-auto-flow: column;
 	grid-auto-columns: minmax(0, 1fr);
@@ -33,13 +33,8 @@ main {
 #style-container {
 	grid-area: style;
 }
-
-#preview-container {
-	grid-area: preview;
-}
-
-#source-container {
-	grid-area: source;
+#output-container {
+	grid-area: output;
 }
 
 #source {
@@ -54,9 +49,10 @@ main {
 .container .name {
 	margin-inline: 1em;
 	margin-block: .2em;
+	display: inline;
 }
 
-.container>*:nth-child(2) {
+.container .content {
 	flex-grow: 1;
 	border: .3em inset;
 }

@@ -5,26 +5,28 @@
 		<meta name="viewport" content="width=device-width">
 		<title>Wechat Markdown</title>
 		<link rel="stylesheet" href="src/index.css" type="text/css" media="all">
-		<script src="src/index.js" type=module defer></script>
+		<script src="src/index.ts" type=module defer></script>
 	</head>
 	<body>
 		<main>
 			<div id="editor-container" class="container">
 				<h1 class="name">Markdown</h1>
-				<div id="editor" class="editor"></div>
+				<div id="editor" class="editor content"></div>
 			</div>
 			<div id="style-container" class="container">
 				<h1 class="name">CSS</h1>
-				<div id="style" class="editor"></div>
+				<div id="style" class="editor content"></div>
 			</div>
-			<div id="preview-container" class="container">
-				<h1 class="name">Output</h1>
-				<iframe id="preview">Preview goes here</iframe>
-			</div>
-			<div id="source-container" class="container">
-				<h1 class="name">Source</h1>
-				<code id="source" data-lang="html">
-				</code>	
+			<div id="output-container" class="container">
+				<span>
+					<h1 class="name">Output</h1>
+					<select name="view" id="view">
+						<option selected value="preview">Preview</option>	
+						<option value="source">Source</option>	
+					</select>
+				</span>
+				<iframe id="preview" class='content'></iframe>
+				<code id="source" class='content' data-lang="html"></code>	
 			</div>
 		</main>
 	</body>
