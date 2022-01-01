@@ -1,10 +1,11 @@
-import {marked} from 'marked';
+import {md} from './markdown-it.ts';
 import * as monaco from 'monaco-editor';
 import * as Editor from './editor';
 import juice from 'juice';
 
 import exampleMarkdown from './examples/example.md.txt';
 import exampleCss from './examples/example.css.txt';
+
 
 const $editor = Editor.create(document.querySelector('#editor'));
 const $style = Editor.create(document.querySelector('#style'));
@@ -36,17 +37,34 @@ $source.addEventListener('dblclick', () => {
 });
 
 function onSourceChanged() {
-	const source = $editor.getModel().getValue();
-	const html = marked.parse(source);
-	const css = $style.getModel().getValue();
+	const markdownText = $editor.getModel().getValue();
+	const html = generateHtml(markdownText);
+	const cssText = $style.getModel().getValue();
 
-	const style = `<style>${css}</style>`;
+	const style = `<style>${cssText}</style>`;
 	$preview.contentDocument.open();
 	$preview.contentDocument.write(style);
 	$preview.contentDocument.write(html);
 	$preview.contentDocument.close();
 
-	// $source.textContent = $preview.contentDocument.body.innerHTML;
-	$source.textContent = juice(style + $preview.contentDocument.body.innerHTML);
+	const $body = $preview.contentDocument.body;
+	$source.textContent = generateSource($body, style);
 	monaco.editor.colorizeElement($source);
+}
+
+/**
+ * @param {string} markdownText
+ * @returns {string} html source
+ */
+function generateHtml(markdownText) {
+	return md.render(markdownText);
+}
+
+/**
+ * @param {HTMLBodyElement} $body
+ * @param {string} style
+ * @returns {string} html source
+ */
+function generateSource($body, style) {
+	return juice(style + $body.innerHTML);
 }
