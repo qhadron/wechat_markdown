@@ -20,6 +20,6 @@ fi
 
 set -x
 
-# yarn run dist
+yarn run dist
 rsync ./dist.tar.gz $remote_host:$remote_path
 ssh -tt $remote_host -- $remote_cmd
