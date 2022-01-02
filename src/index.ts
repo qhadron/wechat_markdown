@@ -141,22 +141,35 @@ class State {
 		const style = `<style>${cssText}</style>`;
 
 		switch (this.view) {
-			case 'preview':
+			case 'preview': {
 				$preview.contentDocument.open();
-			$preview.contentDocument.write(style);
-			$preview.contentDocument.write(html);
-			$preview.contentDocument.close();
-			// make external links open in new window
-			$preview.contentDocument.querySelectorAll('a').forEach(link => {
-				if (link.host != location.host)
-					link.target = '_blank';
-			});
-			break;
+				$preview.contentDocument.write(style);
+				$preview.contentDocument.write(html);
+				$preview.contentDocument.close();
+				// make external links open in new window
+				$preview.contentDocument.querySelectorAll('a').forEach($link => {
+					if ($link.host != location.host)
+						$link.target = '_blank';
+				});
 
-			case 'source':
+				$preview.contentDocument.body.addEventListener('click', event => {
+					let target = event.target as HTMLElement;
+					let line: string;
+					while (target) {
+						line = target?.dataset?.sourceLine;
+						if (line) break;
+						target = target?.parentElement;
+					}
+					if (!line) return;
+					$editor.revealLineInCenter(Number(line), Editor.scrollType.Smooth);
+				});
+				break;
+			}
+			case 'source': {
 				$source.textContent = utils.generateSource(html, style);
-			utils.colorizeElement($source, {});
-			break;
+				utils.colorizeElement($source, {});
+				break;
+			}
 		}
 	}
 };

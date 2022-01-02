@@ -3,8 +3,8 @@
 - [x] side-by-side live preview of rendered markdown content
 - [x] synced scrolling (see [markdown-it's demo](https://markdown-it.github.io/) [[source](https://github.com/markdown-it/markdown-it/blob/df4607f1d4d4be7fdc32e71c04109aea8cc373fa/support/demo_template/index.js)] )
 - [x] find a way to adjust size of editors ~~(use golden layout like compiler explorer?)~~ used [split.js](https://split.js.org/) instead.
+- [x] add reversed synced scrolling?
 - [ ] add default CSS for markdown document
-- [ ] add reversed synced scrolling?
 
 # Functionality
 - [x] support for HTML tags in markdown

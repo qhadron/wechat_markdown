@@ -34,9 +34,13 @@ export namespace Editor {
 			minimap: {
 				enabled: false,
 			},
+			smoothScrolling: true,
+			cursorSmoothCaretAnimation: true,
 		});
 
 
 		return editor;
 	};
+
+	export const scrollType = monaco.editor.ScrollType;
 }
