@@ -24,16 +24,19 @@ self.MonacoEnvironment = {
 	}
 };
 
-export const create = (container: HTMLElement) => {
-	const editor = monaco.editor.create(container, {
-		scrollBeyondLastLine: true,
-		language: 'markdown',
-		minimap: {
-			enabled: false,
-		},
-		automaticLayout: true,
-	});
+// export type StandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
+
+export namespace Editor {
+	export const create = (container: HTMLElement) => {
+		const editor = monaco.editor.create(container, {
+			scrollBeyondLastLine: true,
+			language: 'markdown',
+			minimap: {
+				enabled: false,
+			},
+		});
 
 
-	return editor;
-};
+		return editor;
+	};
+}

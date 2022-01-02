@@ -15,7 +15,10 @@
 	},
 	"devDependencies": {
 		"@chialab/esbuild-plugin-html": "^0.14.10",
+		"@types/debounce": "^1.2.1",
 		"@types/marked": "^4.0.1",
+		"@types/split.js": "^1.6.0",
+		"debounce": "^1.2.1",
 		"esbuild": "^0.14.9",
 		"juice": "^8.0.0",
 		"markdown-it": "^12.3.0",
@@ -31,7 +34,8 @@
 		"markdown-it-sup": "^1.0.0",
 		"monaco-editor": "^0.31.1",
 		"punycode": "^2.1.1",
-		"reload": "^3.2.0"
+		"reload": "^3.2.0",
+		"split.js": "^1.6.4"
 	},
 	"dependencies": {},
 	"type": "module"

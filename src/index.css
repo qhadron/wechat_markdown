@@ -13,28 +13,17 @@ html,body {
 }
 
 main {
-	display: grid;
-
-	grid-template-areas: 
-		'editor output'
-		'style output'
-	;
-	grid-auto-flow: column;
-	grid-auto-columns: minmax(0, 1fr);
-	grid-auto-rows: minmax(0, 1fr);
-	grid-gap: 1em;
-
-	align-items: stretch;
+	display: flex;
+	flex-direction: row;
 }
 
-#editor-container {
-	grid-area: editor;
+#editing {
+	display: flex;
+	flex-direction: column;
 }
-#style-container {
-	grid-area: style;
-}
-#output-container {
-	grid-area: output;
+
+#output {
+	display: flex;
 }
 
 #source {
@@ -44,6 +33,8 @@ main {
 .container {
 	display: flex;
 	flex-direction: column;
+	flex-grow: 1;
+	overflow: hidden;
 }
 
 .container .name {

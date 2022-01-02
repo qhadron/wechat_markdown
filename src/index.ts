@@ -1,14 +1,29 @@
+import interact from 'interactjs';
+import debounce from 'debounce';
+import Split from 'split.js';
+
 import exampleMarkdown from './examples/example.md.txt';
 import exampleCss from './examples/example.css.txt';
 
-import * as Editor from './editor';
+import {Editor} from './editor';
 import * as utils from './utils';
 
 const $editor = Editor.create(document.querySelector('#editor'));
+const $editorContainer: HTMLElement = document.querySelector('#editor-container');
 const $style = Editor.create(document.querySelector('#style'));
+const $styleContainer: HTMLElement = document.querySelector('#style-container');
 const $preview: HTMLIFrameElement = document.querySelector('#preview');
 const $source: HTMLElement = document.querySelector('#source');
 const $viewSelect: HTMLSelectElement = document.getElementById('view') as any;
+
+
+const mainSplit = Split(['#editing', '#output'], {
+	sizes: [50, 50],
+});
+const editingSplit = Split(['#editor-container', '#style-container'], {
+	sizes: [50, 50],
+	direction: 'vertical',
+});
 
 enum OutputType {
 	preview = 'preview',
@@ -30,8 +45,8 @@ class State {
 
 		this.render();
 
-		Array.from(document.querySelectorAll('#output-container .content'))
-			.forEach(($el: HTMLElement) => {
+		[...document.querySelectorAll('#output-container .content')].forEach(
+			($el: HTMLElement) => {
 				if ($el.id.startsWith(this.#view)) {
 					$el.style.display = '';
 				} else {
@@ -42,7 +57,6 @@ class State {
 
 	#markdownSource = '';
 	#cssSource = '';
-
 	get markdownSource() {
 		return this.#markdownSource;
 	}
@@ -95,29 +109,27 @@ class State {
 		});
 
 		this.view = OutputType.preview;
+
+		[$editor, $style].forEach(editor => {
+			const observer = new ResizeObserver(
+				debounce(() => editor.layout() ,State.RENDER_LIMIT_MS)
+			);
+			observer.observe(editor.getContainerDomNode());
+			return observer;
+		});
+
 		console.log("Initialized state!");
 
 		this.render();
 	}
 
 	static RENDER_LIMIT_MS = 100;
-	/**
-	 * @type {Date | null}
-	 */
-	#renderJobId: number | null = null;
 
-	maybeRender() {
-		if (this.#renderJobId) {
-			clearTimeout(this.#renderJobId);
-		}
-		this.#renderJobId = setTimeout(() => this.#renderOutput(), State.RENDER_LIMIT_MS);
-	}
-
+	maybeRender = debounce(() => this.#renderOutput(), State.RENDER_LIMIT_MS);
 	render() {
-		if (this.#renderJobId) {
-			clearTimeout(this.#renderJobId);
-		}
-		this.#renderJobId = setTimeout(() => this.#renderOutput(), 0);
+		this.maybeRender.clear();
+		this.maybeRender();
+		this.maybeRender.flush();
 	}
 
 	#renderOutput() {
@@ -131,20 +143,20 @@ class State {
 		switch (this.view) {
 			case 'preview':
 				$preview.contentDocument.open();
-				$preview.contentDocument.write(style);
-				$preview.contentDocument.write(html);
-				$preview.contentDocument.close();
-				// make external links open in new window
-				$preview.contentDocument.querySelectorAll('a').forEach(link => {
-					if (link.host != location.host)
-						link.target = '_blank';
-				});
-				break;
+			$preview.contentDocument.write(style);
+			$preview.contentDocument.write(html);
+			$preview.contentDocument.close();
+			// make external links open in new window
+			$preview.contentDocument.querySelectorAll('a').forEach(link => {
+				if (link.host != location.host)
+					link.target = '_blank';
+			});
+			break;
 
 			case 'source':
 				$source.textContent = utils.generateSource(html, style);
-				utils.colorizeElement($source, {});
-				break;
+			utils.colorizeElement($source, {});
+			break;
 		}
 	}
 };

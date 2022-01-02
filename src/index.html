@@ -5,29 +5,34 @@
 		<meta name="viewport" content="width=device-width">
 		<title>Wechat Markdown</title>
 		<link rel="stylesheet" href="src/index.css" type="text/css" media="all">
+		<link rel="stylesheet" href="src/gutter.css" type="text/css" media="all">
 		<script src="src/index.ts" type=module defer></script>
 	</head>
 	<body>
 		<main>
-			<div id="editor-container" class="container">
-				<h1 class="name">Markdown</h1>
-				<div id="editor" class="editor content"></div>
-			</div>
-			<div id="style-container" class="container">
-				<h1 class="name">CSS</h1>
-				<div id="style" class="editor content"></div>
-			</div>
-			<div id="output-container" class="container">
-				<span>
-					<h1 class="name">Output</h1>
-					<select name="view" id="view">
-						<option selected value="preview">Preview</option>
-						<option value="source">Source</option>
-					</select>
-				</span>
-				<iframe id="preview" class='content'></iframe>
-				<code id="source" class='content' data-lang="html"></code>
-			</div>
+			<section id="editing">
+				<div id="editor-container" class="container">
+					<h1 class="name">Markdown</h1>
+					<div id="editor" class="editor content"></div>
+				</div>
+				<div id="style-container" class="container">
+					<h1 class="name">CSS</h1>
+					<div id="style" class="editor content"></div>
+				</div>
+			</section>
+			<section id="output">
+				<div id="output-container" class="container">
+					<span>
+						<h1 class="name">Output</h1>
+						<select name="view" id="view">
+							<option selected value="preview">Preview</option>
+							<option value="source">Source</option>
+						</select>
+					</span>
+					<iframe id="preview" class='content'></iframe>
+					<code id="source" class='content' data-lang="html"></code>
+				</div>
+			</section>
 		</main>
 	</body>
 </html>
