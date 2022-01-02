@@ -100,11 +100,13 @@ const loggerPlugin = () => {
 			build.onEnd(async result => {
 				const duration = Date.now() - start.getTime();
 				console.info(clc.yellow(`Build ${type} took: ${duration}ms`));
-				Object.entries(result.metafile.outputs).map(([output, {inputs}]) => {
-					Object.keys(inputs)
-						.filter(x => !x.startsWith('node_modules'))
-						.map(input => console.log('  ' + clc.greenBright(`${input} => ${output}`)));
-				});
+				if (result.metafile) {
+					Object.entries(result.metafile.outputs).map(([output, {inputs}]) => {
+						Object.keys(inputs)
+							.filter(x => !x.startsWith('node_modules'))
+							.map(input => console.log('  ' + clc.greenBright(`${input} => ${output}`)));
+					});
+				}
 				if (result.warnings.length > 0) {
 					console.warn(result.warnings);
 				}
