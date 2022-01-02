@@ -45,6 +45,7 @@ main > * {
 	margin-inline: 1em;
 	margin-block: .2em;
 	display: inline;
+	font-size: 2em;
 }
 
 .container .content {
