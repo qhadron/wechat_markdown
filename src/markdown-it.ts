@@ -3,18 +3,20 @@ import MarkdownIt from 'markdown-it';
 ///////////////
 //  plugins  //
 ///////////////
-import abbr from 'markdown-it-abbr'
-import container from 'markdown-it-container'
-import deflist from 'markdown-it-deflist'
-import emoji from 'markdown-it-emoji'
-import footnote from 'markdown-it-footnote'
-import ins from 'markdown-it-ins'
-import mark from 'markdown-it-mark'
-import sub from 'markdown-it-sub'
-import sup from 'markdown-it-sup'
+import abbr from 'markdown-it-abbr';
+import container from 'markdown-it-container';
+import deflist from 'markdown-it-deflist';
+import emoji from 'markdown-it-emoji';
+import footnote from 'markdown-it-footnote';
+import ins from 'markdown-it-ins';
+import mark from 'markdown-it-mark';
+import sub from 'markdown-it-sub';
+import sup from 'markdown-it-sup';
+import inject_linenumbers from 'markdown-it-inject-linenumbers';
 
 const plugins = [
-	abbr, container, deflist, emoji, footnote, ins, mark, sub, sup
+	abbr, container, deflist, emoji, footnote, ins, mark, sub, sup,
+	inject_linenumbers
 ];
 
 export const makeMd = () => {

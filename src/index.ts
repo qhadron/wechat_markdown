@@ -16,7 +16,7 @@ enum OutputType {
 }
 
 class State {
-	#view: OutputType;	
+	#view: OutputType;
 
 	get view() {
 		return this.#view ?? OutputType.preview;
@@ -58,12 +58,32 @@ class State {
 		this.maybeRender();
 	}
 
+	#editorLine = 0;
+	#maxEditorLines = 0;
+
+	get editorLine() {
+		return this.#editorLine;
+	}
+	set editorLine(val: number) {
+		if (val == this.#editorLine)
+			return;
+		this.#editorLine = val;
+		utils.scrollToLine($preview, this.#editorLine, this.#maxEditorLines);
+	}
+
 	constructor() {
 		console.log("Initializing state...");
-		$editor.onDidChangeModelContent(() => this.markdownSource = $editor.getModel().getValue());
-		$style.onDidChangeModelContent(() => this.cssSource = $style.getModel().getValue());
 
+		$editor.onDidChangeModelContent(() => {
+			this.markdownSource = $editor.getModel().getValue()
+			this.#maxEditorLines = $editor.getModel().getLineCount();
+		});
+		$editor.onDidChangeCursorPosition(() => {
+			this.editorLine = $editor.getPosition().lineNumber;
+		});
 		$editor.getModel().setValue(exampleMarkdown);
+
+		$style.onDidChangeModelContent(() => this.cssSource = $style.getModel().getValue());
 		$style.getModel().setValue(exampleCss);
 
 		$viewSelect.addEventListener('change', () => {
@@ -76,6 +96,8 @@ class State {
 
 		this.view = OutputType.preview;
 		console.log("Initialized state!");
+
+		this.render();
 	}
 
 	static RENDER_LIMIT_MS = 100;

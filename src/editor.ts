@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.main.js';
+import * as monaco from 'monaco-editor';
 
 declare global {
 	interface Window {
@@ -24,9 +24,6 @@ self.MonacoEnvironment = {
 	}
 };
 
-/**
- * 
- */
 export const create = (container: HTMLElement) => {
 	const editor = monaco.editor.create(container, {
 		scrollBeyondLastLine: true,

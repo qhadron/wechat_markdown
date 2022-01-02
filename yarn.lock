@@ -618,6 +618,10 @@ markdown-it-footnote@^3.0.3:
   resolved "https://registry.yarnpkg.com/markdown-it-footnote/-/markdown-it-footnote-3.0.3.tgz#e0e4c0d67390a4c5f0c75f73be605c7c190ca4d8"
   integrity sha512-YZMSuCGVZAjzKMn+xqIco9d1cLGxbELHZ9do/TSYVzraooV8ypsppKNmUJ0fVH5ljkCInQAtFpm8Rb3eXSrt5w==
 
+"markdown-it-inject-linenumbers@https://github.com/digitalmoksha/markdown-it-inject-linenumbers.git":
+  version "0.2.0"
+  resolved "https://github.com/digitalmoksha/markdown-it-inject-linenumbers.git#6ee88c78ac7e74c8a0d3176c19eef76a95138fdf"
+
 markdown-it-ins@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/markdown-it-ins/-/markdown-it-ins-3.0.1.tgz#c09356b917cf1dbf73add0b275d67ab8c73d4b4d"
