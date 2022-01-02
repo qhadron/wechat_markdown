@@ -1,6 +1,5 @@
 import interact from 'interactjs';
 import debounce from 'debounce';
-import Split from 'split.js';
 
 import exampleMarkdown from './examples/example.md.txt';
 import exampleCss from './examples/example.css.txt';
@@ -15,15 +14,6 @@ const $styleContainer: HTMLElement = document.querySelector('#style-container');
 const $preview: HTMLIFrameElement = document.querySelector('#preview');
 const $source: HTMLElement = document.querySelector('#source');
 const $viewSelect: HTMLSelectElement = document.getElementById('view') as any;
-
-
-const mainSplit = Split(['#editing', '#output'], {
-	sizes: [50, 50],
-});
-const editingSplit = Split(['#editor-container', '#style-container'], {
-	sizes: [50, 50],
-	direction: 'vertical',
-});
 
 enum OutputType {
 	preview = 'preview',
