@@ -16,3 +16,4 @@
 
 # Other
 - [ ] add `eslint` and `prettier` to build/commit process
+- [ ] fix `monaco` builds (font not resolved correctly, missing some component..., check docs again?)

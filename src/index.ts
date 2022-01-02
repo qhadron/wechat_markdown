@@ -97,14 +97,6 @@ class State {
 
 		this.view = OutputType.preview;
 
-		[$editor, $style].forEach(editor => {
-			const observer = new ResizeObserver(
-				debounce(() => editor.layout() ,State.RENDER_LIMIT_MS)
-			);
-			observer.observe(editor.getContainerDomNode());
-			return observer;
-		});
-
 		console.log("Initialized state!");
 
 		this.render();
@@ -158,6 +150,16 @@ class State {
 				break;
 			}
 		}
+	}
+
+	#layout = debounce(() => {
+		$editor.layout();
+		$style.layout();
+	}, State.RENDER_LIMIT_MS, true);
+
+	layout(sizes: number[]) {
+		// TODO: save sizes
+		this.#layout();
 	}
 };
 

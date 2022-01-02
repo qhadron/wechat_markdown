@@ -14,22 +14,22 @@
 			<section id="editing">
 				<div id="editor-container" class="container">
 					<h1 class="name">Markdown</h1>
-					<div id="editor" class="editor content"></div>
+					<div id="editor" data-language='markdown' class="editor content"></div>
 				</div>
 				<div id="style-container" class="container">
 					<h1 class="name">CSS</h1>
-					<div id="style" class="editor content"></div>
+					<div id="style" data-language='css' class="editor content"></div>
 				</div>
 			</section>
 			<section id="output">
 				<div id="output-container" class="container">
-					<span>
+					<div>
 						<h1 class="name">Output</h1>
 						<select name="view" id="view">
 							<option selected value="preview">Preview</option>
 							<option value="source">Source</option>
 						</select>
-					</span>
+					</div>
 					<iframe id="preview" class='content'></iframe>
 					<code id="source" class='content' data-lang="html" style='display: none'></code>
 				</div>

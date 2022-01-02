@@ -35,10 +35,11 @@ main > * {
 }
 
 .container {
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
+	--title-height: 2em;
 	flex-grow: 1;
+	overflow: hidden;
+	position: relative;
+	min-height: var(--title-height);
 }
 
 .container .name {
@@ -46,9 +47,12 @@ main > * {
 	margin-block: .2em;
 	display: inline;
 	font-size: 2em;
+	height: var(--title-height);
 }
 
 .container .content {
-	flex-grow: 1;
+	display: block;
 	border: .3em inset;
+	width: 100%;
+	height: calc(100% - var(--title-height))
 }
