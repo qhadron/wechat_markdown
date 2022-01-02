@@ -97,6 +97,25 @@ class State {
 
 		this.view = OutputType.preview;
 
+		document.querySelectorAll('#editing .name').forEach(($el, i) => {
+			$el.addEventListener('click', () => {
+				const split = window.editingSplit;
+				const [upper, lower] = split.getSizes();
+				let smallerI = upper > lower ? 0 : i;
+				let otherI = 1 - i;
+
+				if (upper == lower) {
+					split.collapse(otherI);
+				} else if (i == smallerI) {
+					split.setSizes([50, 50]);
+				} else {
+					split.collapse(otherI);
+				}
+
+				this.#layout();
+			});
+		});
+
 		console.log("Initialized state!");
 
 		this.render();
