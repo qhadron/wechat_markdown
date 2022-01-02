@@ -16,17 +16,25 @@ import inject_linenumbers from 'markdown-it-inject-linenumbers';
 
 const plugins = [
 	abbr, container, deflist, emoji, footnote, ins, mark, sub, sup,
-	inject_linenumbers
 ];
 
-export const makeMd = () => {
+export const makeMd = (additionalPlugins=[]) => {
 	const md = new MarkdownIt().set({
 		html: true,
 		linkify: true,
 		typographer: true,
 	});
-	plugins.forEach(plugin => md.use(plugin));
+	[...plugins, ...additionalPlugins]
+		.forEach(plugin => md.use(plugin));
 	return md;
 };
 
-export const md = makeMd();
+export enum OutputType {
+	preview = 'preview',
+	source = 'source',
+}
+
+export const md = {
+	[OutputType.preview]: makeMd([inject_linenumbers]),
+	[OutputType.source]: makeMd(),
+}

@@ -1,4 +1,4 @@
-import {md} from './markdown-it';
+import {md, OutputType} from './markdown-it';
 import juice from 'juice';
 import * as monaco from 'monaco-editor';
 
@@ -10,8 +10,8 @@ export function selectAll(element: HTMLElement) {
 	document.getSelection().addRange(range);
 }
 
-export function generateHtml(markdownText: string): string {
-	return md.render(markdownText);
+export function generateHtml(markdownText: string, type: OutputType): string {
+	return md[type].render(markdownText);
 }
 
 export function generateSource(html: string, style: string): string {

@@ -6,6 +6,7 @@ import exampleCss from './examples/example.css.txt';
 
 import {Editor} from './editor';
 import * as utils from './utils';
+import {OutputType} from './markdown-it';
 
 const $editor = Editor.create(document.querySelector('#editor'));
 const $editorContainer: HTMLElement = document.querySelector('#editor-container');
@@ -15,10 +16,6 @@ const $preview: HTMLIFrameElement = document.querySelector('#preview');
 const $source: HTMLElement = document.querySelector('#source');
 const $viewSelect: HTMLSelectElement = document.getElementById('view') as any;
 
-enum OutputType {
-	preview = 'preview',
-	source = 'source',
-}
 
 class State {
 	#view: OutputType;
@@ -125,7 +122,7 @@ class State {
 	#renderOutput() {
 		// const markdownText = $editor.getModel().getValue();
 		const markdownText = this.markdownSource;
-		const html = utils.generateHtml(markdownText);
+		const html = utils.generateHtml(markdownText, this.#view);
 		const cssText = this.cssSource;
 
 		const style = `<style>${cssText}</style>`;
