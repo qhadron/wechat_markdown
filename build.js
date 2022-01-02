@@ -13,6 +13,8 @@ const isDev = process.env.NODE_ENV == 'development';
 
 const isServe = process.argv.some(arg => arg == '--serve');
 
+const publicPath = isDev ? '' : process.env.PUBLIC_PATH;
+
 /**
  * @type {import('esbuild').Plugin}
  */
@@ -118,6 +120,8 @@ const loggerPlugin = () => {
 	};
 }
 
+let cleaned = false;
+
 /**
  * @type {() => import('esbuild').Plugin}
  */
@@ -137,6 +141,7 @@ const cleanPlugin = () => {
 	return {
 		name: 'clear',
 		async setup(build) {
+			if (cleaned) return;
 			const entryPoints = build.initialOptions.entryPoints;
 			const entryPoint = entryPoints instanceof Array ?
 				entryPoints :
@@ -144,6 +149,7 @@ const cleanPlugin = () => {
 			if (entryPoint[0].endsWith('html')) {
 				await cleanDist();
 			}
+			cleaned = true;
 		},
 	};
 };
@@ -174,6 +180,7 @@ const buildOptions = {
 		'.ttf': 'file',
 		'.png': 'file',
 	},
+	publicPath: publicPath,
 
 	plugins: [
 		cleanPlugin(),
@@ -184,12 +191,43 @@ const buildOptions = {
 	],
 };
 
-if (isServe) {
-	serve({
-		servedir: __dist,
-		port: 8000,
-		host: 'localhost',
-	}, buildOptions)
-} else {
-	build(buildOptions);
+if (publicPath)
+	console.log(clc.yellow(clc.bold(`public path is: `, publicPath)))
+
+function buildMonaco() {
+	const workerEntryPoints = [ 
+		'vs/language/json/json.worker.js',
+		'vs/language/css/css.worker.js',
+		'vs/language/html/html.worker.js',
+		'vs/language/typescript/ts.worker.js',
+		'vs/editor/editor.worker.js',
+	];
+	return build({
+		entryPoints: workerEntryPoints.map((entry) => `./node_modules/monaco-editor/esm/${entry}`),
+		bundle: true,
+		format: 'iife',
+		outbase: './node_modules/monaco-editor/esm/',
+		outdir: __dist,
+		metafile: true,
+		plugins: [
+			cleanPlugin(),
+			loggerPlugin(),
+		],
+	});
 }
+
+
+async function main() {
+	await buildMonaco();
+	if (isServe) {
+		serve({
+			servedir: __dist,
+			port: 8000,
+			host: 'localhost',
+		}, buildOptions)
+	} else {
+		build(buildOptions);
+	}
+}
+
+main();
