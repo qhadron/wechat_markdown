@@ -5,11 +5,11 @@
 	"author": "Jack Li <jack.lee2980@gmail.com>",
 	"license": "MIT",
 	"scripts": {
-		"clean": "rm -rf ./dist",
-		"build": "node ./build.js",
-		"start-dev": "NODE_ENV=development node ./build.js --serve",
-		"build-dev": "NODE_ENV=development node ./build.js",
-		"predist": "yarn run clean && yarn run build",
+		"start": "NODE_ENV=development node ./build.js --serve",
+		"build": "yarn run build:dev",
+		"build:dev": "NODE_ENV=development node ./build.js",
+		"build:prod": "NODE_ENV=production node ./build.js",
+		"predist": "yarn run build:prod",
 		"dist": "tar -C ./dist -czvf dist.tar.gz ."
 	},
 	"devDependencies": {
@@ -17,6 +17,7 @@
 		"@types/debounce": "^1.2.1",
 		"@types/marked": "^4.0.1",
 		"@types/split.js": "^1.6.0",
+		"cli-color": "^2.0.1",
 		"debounce": "^1.2.1",
 		"esbuild": "^0.14.9",
 		"juice": "^8.0.0",

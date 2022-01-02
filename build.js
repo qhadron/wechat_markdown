@@ -24,8 +24,10 @@ const renameEntryHtml = {
 		const entries = entryPoints instanceof Array ? entryPoints :
 			Object.values(entryPoints);
 
-		if (entries) { 
-			build.onEnd(async result => { 
+		if (entries) {
+			build.onEnd(async result => {
+				if (isServe)
+					return;
 				if (!result.metafile)
 					return;
 				await Promise.all(Object.entries(result.metafile.outputs)
@@ -36,7 +38,7 @@ const renameEntryHtml = {
 						const dest = join(__dist, 'index.html');
 						const oldStats = result.metafile.outputs[out];
 						delete result.metafile.outputs[out];
-						result.metafile.outputs[relative(__dirname, __dist)] = oldStats;
+						result.metafile.outputs[relative(__dirname, dest)] = oldStats;
 						return rename(out, dest);
 					}));
 			});
@@ -133,8 +135,6 @@ const cleanPlugin = () => {
 	return {
 		name: 'clear',
 		async setup(build) {
-			if (isDev) return;
-
 			const entryPoints = build.initialOptions.entryPoints;
 			const entryPoint = entryPoints instanceof Array ?
 				entryPoints :
@@ -150,12 +150,10 @@ const cleanPlugin = () => {
  * @type {import('esbuild').BuildOptions}
  */
 const buildOptions = {
-	entryPoints: {
-		'index.html': 'src/index.html',
-	},
+	entryPoints: ['src/index.html'],
 	outdir: __dist,
+	assetNames: isServe ? '[name]' : '[name]-[hash]',
 
-	minify: !isDev,
 	bundle: true,
 	platform: "browser",
 	sourcemap: isDev,
@@ -164,6 +162,8 @@ const buildOptions = {
 		"chrome96",
 		"firefox95",
 	],
+
+	minify: !isDev,
 	drop: isDev ? [] : ['debugger', 'console'],
 	metafile: true,
 
@@ -175,7 +175,7 @@ const buildOptions = {
 
 	plugins: [
 		cleanPlugin(),
-		htmlPlugin({}),
+		htmlPlugin(),
 		moveAssetsPlugin,
 		renameEntryHtml,
 		loggerPlugin(),
