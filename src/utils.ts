@@ -14,8 +14,8 @@ export function generateHtml(markdownText: string): string {
 	return md.render(markdownText);
 }
 
-export function generateSource($body: HTMLBodyElement, style: string): string {
-	return juice(style + $body.innerHTML);
+export function generateSource(html: string, style: string): string {
+	return juice(style + html);
 }
 
 export function lerp(begin: number, end: number, ratio:number) {

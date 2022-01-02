@@ -134,11 +134,15 @@ class State {
 				$preview.contentDocument.write(style);
 				$preview.contentDocument.write(html);
 				$preview.contentDocument.close();
+				// make external links open in new window
+				$preview.contentDocument.querySelectorAll('a').forEach(link => {
+					if (link.host != location.host)
+						link.target = '_blank';
+				});
 				break;
 
 			case 'source':
-				const $body: HTMLBodyElement = $preview.contentDocument.body as any;
-				$source.textContent = utils.generateSource($body, style);
+				$source.textContent = utils.generateSource(html, style);
 				utils.colorizeElement($source, {});
 				break;
 		}
