@@ -1,5 +1,6 @@
 import {md, OutputType} from './markdown-it';
 import juice from 'juice';
+import DOMPurify from 'dompurify';
 import * as monaco from 'monaco-editor';
 
 export function selectAll(element: HTMLElement) {
@@ -15,7 +16,7 @@ export function generateHtml(markdownText: string, type: OutputType): string {
 }
 
 export function generateSource(html: string, style: string): string {
-	return juice(style + html);
+	return DOMPurify.sanitize(juice(style + html));
 }
 
 export function lerp(begin: number, end: number, ratio:number) {
@@ -59,7 +60,7 @@ export function scroll($element: HTMLElement | Window, pos: number) {
 	const options = {
 		top: pos,
 		behavior: 'smooth',
-	}; 
+	};
 	$element.scroll(options as any);
 }
 
