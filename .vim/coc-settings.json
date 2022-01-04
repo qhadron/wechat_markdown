@@ -1,0 +1,20 @@
+{
+	"eslint.packageManager": "yarn",
+	"eslint.autoFixOnSave": false,
+	"eslint.format.enable": false,
+	"eslint.run": "onType",
+	"eslint.useESLintClass": true,
+	"tsserver.enable": true,
+	"tsserver.enableJavascript": true,
+	"coc.preferences.formatOnSaveFiletypes": [
+		"javascript",
+		"typescript",
+		"tsx",
+		"jsx",
+		"json",
+		"markdown"
+	],
+	"prettier.onlyUseLocalVersion": true,
+	"prettier.formatterPriority": 100,
+	"workspace.workspaceFolderCheckCwd": false
+}

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width">
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
 		<title>Wechat Markdown</title>
-		<link rel="stylesheet" href="src/index.css" type="text/css" media="all">
-		<link rel="stylesheet" href="src/gutter.css" type="text/css" media="all">
+		<link rel="stylesheet" href="src/index.css" type="text/css" media="all" />
+		<link rel="stylesheet" href="src/gutter.css" type="text/css" media="all" />
 		<script src="src/index.ts" type="module" defer></script>
 		<script src="src/splits.ts"></script>
 	</head>
@@ -14,11 +14,15 @@
 			<section id="editing">
 				<div id="editor-container" class="container">
 					<h1 class="name">Markdown</h1>
-					<div id="editor" data-language='markdown' class="editor content"></div>
+					<div
+						id="editor"
+						data-language="markdown"
+						class="editor content"
+					></div>
 				</div>
 				<div id="style-container" class="container">
 					<h1 class="name">CSS</h1>
-					<div id="style" data-language='css' class="editor content"></div>
+					<div id="style" data-language="css" class="editor content"></div>
 				</div>
 			</section>
 			<section id="output">
@@ -30,8 +34,13 @@
 							<option value="source">Source</option>
 						</select>
 					</div>
-					<iframe id="preview" class='content'></iframe>
-					<code id="source" class='content' data-lang="html" style='display: none'></code>
+					<iframe id="preview" class="content"></iframe>
+					<code
+						id="source"
+						class="content"
+						data-lang="html"
+						style="display: none"
+					></code>
 				</div>
 			</section>
 		</main>

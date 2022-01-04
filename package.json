@@ -1,28 +1,50 @@
 {
 	"name": "wechat_markdown",
 	"version": "1.0.0",
-	"main": "index.js",
 	"author": "Jack Li <jack.lee2980@gmail.com>",
 	"license": "MIT",
+	"packageManager": "yarn@3.1.1",
+	"type": "module",
 	"scripts": {
-		"start": "NODE_ENV=development node ./build.js --serve",
-		"build": "yarn run build:dev",
-		"build:dev": "NODE_ENV=development node ./build.js",
-		"build:prod": "NODE_ENV=production node ./build.js",
-		"predist": "yarn run build:prod",
-		"dist": "tar -C ./dist -czvf dist.tar.gz ."
+		"serve": "NODE_ENV=development node --loader ts-node/esm ./build.ts --serve",
+		"build": "yarn run build-prod",
+		"build-dev": "NODE_ENV=development node --loader ts-node/esm ./build.ts",
+		"build-prod": "NODE_ENV=production node --loader ts-node/esm ./build.ts",
+		"dist": "yarn run build-prod && tar -C ./dist -czvf dist.tar.gz .",
+		"lint": "prettier --check . && eslint --cache . && tsc --noEmit",
+		"fix": "prettier --write . ; eslint --cache --fix .",
+		"postinstall": "husky install",
+		"prepublishOnly": "pinst --disable",
+		"postpublish": "pinst --enable"
 	},
 	"devDependencies": {
+		"@types/debounce": "^1",
+		"@types/dompurify": "^2",
+		"@types/eslint": "^8",
+		"@types/markdown-it": "^12",
+		"@types/node": "^17.0.7",
+		"@typescript-eslint/eslint-plugin": "^4.0.1",
+		"@typescript-eslint/parser": "^4.0.0",
+		"eslint": "^7.12.1",
+		"eslint-config-prettier": "^8.3.0",
+		"eslint-config-standard-with-typescript": "latest",
+		"eslint-import-resolver-node": "^0.3.6",
+		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-promise": "^5.0.0",
+		"husky": ">=6",
+		"lint-staged": ">=10",
+		"pinst": ">=2",
+		"prettier": "^2.5.1",
+		"typescript": "<4.5.0"
+	},
+	"dependencies": {
 		"@chialab/esbuild-plugin-html": "^0.14.10",
-		"@types/debounce": "^1.2.1",
-		"@types/dompurify": "^2.3.2",
-		"@types/markdown-it": "^12.2.3",
-		"@types/marked": "^4.0.1",
-		"@types/split.js": "^1.6.0",
+		"@types/cli-color": "^2",
 		"cli-color": "^2.0.1",
 		"debounce": "^1.2.1",
 		"dompurify": "^2.3.4",
-		"esbuild": "^0.14.9",
+		"esbuild": "^0.14.10",
 		"juice": "^8.0.0",
 		"markdown-it": "^12.3.0",
 		"markdown-it-abbr": "^1.0.4",
@@ -37,8 +59,14 @@
 		"markdown-it-sup": "^1.0.0",
 		"monaco-editor": "^0.31.1",
 		"punycode": "^2.1.1",
-		"split.js": "^1.6.4"
+		"split.js": "^1.6.4",
+		"ts-node": "^10.4.0"
 	},
-	"dependencies": {},
-	"type": "module"
+	"engines": {
+		"node": ">=16"
+	},
+	"lint-staged": {
+		"*.{js,ts}": "eslint --cache --fix",
+		"*.{js,ts,css,md}": "prettier --write"
+	}
 }

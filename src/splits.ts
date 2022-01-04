@@ -1,4 +1,4 @@
-import Split from 'split.js';
+import Split from "split.js";
 
 const defaultOptions = {
 	sizes: [50, 50],
@@ -6,22 +6,22 @@ const defaultOptions = {
 	onDragEnd(sizes: number[]) {
 		window.state.layout(sizes);
 	},
-}
+};
 
-export const mainSplit = Split(['#editing', '#output'], {
+export const mainSplit = Split(["#editing", "#output"], {
 	...defaultOptions,
-	direction: "horizontal"
+	direction: "horizontal",
 });
-export const editingSplit = Split(['#editor-container', '#style-container'], {
+export const editingSplit = Split(["#editor-container", "#style-container"], {
 	...defaultOptions,
-	direction: "vertical"
+	direction: "vertical",
 });
 
 declare global {
 	interface Window {
-		mainSplit: typeof mainSplit,
-		editingSplit: typeof editingSplit,
+		mainSplit: typeof mainSplit;
+		editingSplit: typeof editingSplit;
 	}
 }
 
-Object.assign(window, {mainSplit, editingSplit});
+Object.assign(window, { mainSplit, editingSplit });

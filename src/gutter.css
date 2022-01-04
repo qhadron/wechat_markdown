@@ -5,11 +5,11 @@
 }
 
 .gutter.gutter-horizontal {
-	background-image: url('/assets/grips/horizontal.png');
+	background-image: url("/assets/grips/horizontal.png");
 	cursor: col-resize;
 }
 
 .gutter.gutter-vertical {
-	background-image: url('/assets/grips/vertical.png');
+	background-image: url("/assets/grips/vertical.png");
 	cursor: row-resize;
 }
