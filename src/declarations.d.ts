@@ -1,5 +1,6 @@
 declare module "*.txt" {
-	export default string;
+	const url: string;
+	export default url;
 }
 
 declare module "markdown-it-*" {

@@ -1,11 +1,11 @@
 import debounce from "debounce";
 
-import exampleMarkdown from "./examples/example.md.txt";
-import exampleCss from "./examples/example.css.txt";
-
 import { Editor } from "./editor";
 import * as utils from "./utils";
 import { OutputType } from "./markdown-it";
+
+import exampleMarkdown from "./examples/example.md.txt";
+import exampleCss from "./examples/example.css.txt";
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion --
  * specified in index.html
@@ -52,7 +52,9 @@ class State {
 	}
 
 	set markdownSource(src) {
+		if (src === this.#markdownSource) return;
 		this.#markdownSource = src;
+		$editor.setValue(src);
 		this.maybeRender();
 	}
 
@@ -61,7 +63,9 @@ class State {
 	}
 
 	set cssSource(src) {
+		if (this.#cssSource === src) return;
 		this.#cssSource = src;
+		$style.setValue(src);
 		this.maybeRender();
 	}
 
@@ -84,8 +88,9 @@ class State {
 		$editor.onDidChangeModelContent(() => {
 			const model = $editor.getModel();
 			if (model == null) return;
-			this.markdownSource = model.getValue();
+			this.#markdownSource = model.getValue();
 			this.#maxEditorLines = model.getLineCount();
+			this.maybeRender();
 		});
 		$editor.onDidChangeCursorPosition(() => {
 			const model = $editor.getModel();
@@ -93,14 +98,13 @@ class State {
 			const position = $editor.getPosition();
 			if (position != null) this.editorLine = position.lineNumber;
 		});
-		$editor.getModel()?.setValue(exampleMarkdown);
 
 		$style.onDidChangeModelContent(() => {
 			const model = $style.getModel();
 			if (model == null) return;
-			this.cssSource = model.getValue();
+			this.#cssSource = model.getValue();
+			this.maybeRender();
 		});
-		$style.getModel()?.setValue(exampleCss);
 
 		$viewSelect.addEventListener("change", () => {
 			this.view = $viewSelect.value as OutputType;
@@ -131,9 +135,24 @@ class State {
 			});
 		});
 
+		this.loadExamples();
+
 		console.log("Initialized state!");
 
 		this.render();
+	}
+
+	loadExamples(): void {
+		void fetch(exampleMarkdown)
+			.then(async (r) => await r.text())
+			.then((source) => {
+				if (!this.markdownSource) this.markdownSource = source;
+			});
+		void fetch(exampleCss)
+			.then(async (r) => await r.text())
+			.then((source) => {
+				if (!this.cssSource) this.cssSource = source;
+			});
 	}
 
 	static RENDER_LIMIT_MS = 100;

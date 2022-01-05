@@ -1,4 +1,3 @@
-// @ts-check
 import htmlPlugin from "@chialab/esbuild-plugin-html";
 import clc from "cli-color";
 import {
@@ -8,10 +7,20 @@ import {
 	BuildOptions,
 	Metafile,
 	BuildResult,
+	ImportKind,
 } from "esbuild";
-import { cp, opendir, rename, rm } from "fs/promises";
-import { basename, dirname, join, relative, resolve as realpath } from "path";
+import { cp, opendir, rename, rm, mkdir, readFile, stat } from "fs/promises";
+import {
+	basename,
+	dirname,
+	join,
+	relative,
+	resolve as realpath,
+	parse as parsePath,
+	normalize as normalizPath,
+} from "path";
 import { fileURLToPath } from "url";
+import xxhash from "xxhashjs";
 
 const DIR_NAME = dirname(fileURLToPath(import.meta.url));
 const DIST = join(DIR_NAME, "dist");
@@ -21,17 +30,45 @@ const isServe = process.argv.some((arg) => arg === "--serve");
 
 const publicPath = isDev ? "" : process.env.PUBLIC_PATH;
 
+/**
+ * returns path of entrypoints, normalized from build options
+ */
+function normalizeEntryPoints(
+	entryPoints: BuildOptions["entryPoints"]
+): string[] {
+	const entries =
+		entryPoints instanceof Array
+			? entryPoints
+			: Object.values(entryPoints ?? {});
+	return entries ?? [];
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+function getLogger(name: string | BuildOptions | string[], color = clc.yellow) {
+	const strName = (() => {
+		if (typeof name === "string") return name;
+		if (Array.isArray(name)) {
+			return basename(name[0]);
+		} else {
+			return normalizeEntryPoints(name.entryPoints)[0].split("/").slice(-1)[0];
+		}
+	})();
+	const formattedName = clc.black(clc.bold(clc.bgYellowBright(`[${strName}]`)));
+	return (...args: unknown[]): void => {
+		console.info(
+			formattedName,
+			...args.map((arg) => (typeof arg === "string" ? color(arg) : arg))
+		);
+	};
+}
+
 const renameEntryHtml: Plugin = {
 	name: "rename entry html",
 	setup(build) {
 		build.initialOptions.metafile = true;
-		const entryPoints = build.initialOptions.entryPoints;
-		const entries =
-			entryPoints instanceof Array
-				? entryPoints
-				: Object.values(entryPoints ?? {});
-
+		const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
 		if (entries.length > 0) {
+			const log = getLogger("rename entry", clc.magenta);
 			build.onEnd(async (result) => {
 				if (isServe) return;
 				if (result.metafile == null) return;
@@ -41,11 +78,13 @@ const renameEntryHtml: Plugin = {
 							const entry = entries.find((x) => x in inputs);
 							if (entry == null || entry.length === 0)
 								return await Promise.resolve();
-							const dest = join(DIST, "index.html");
+							const dest = join(DIST, basename(entry));
 							if (result.metafile == null) return await Promise.resolve();
 							const oldStats = result.metafile.outputs[out];
-							delete result.metafile.outputs[out]; // eslint-disable-line
-							result.metafile.outputs[relative(DIR_NAME, dest)] = oldStats;
+							delete result.metafile.outputs[out]; // eslint-disable-line -- we need to mess with the metafile
+							const relativeOutput = relative(DIR_NAME, dest);
+							result.metafile.outputs[relativeOutput] = oldStats;
+							log(`Renaming ${out} => ${relativeOutput}`);
 							return await rename(out, dest);
 						}
 					)
@@ -55,41 +94,208 @@ const renameEntryHtml: Plugin = {
 	},
 };
 
-const moveAssetsPlugin: Plugin = {
-	name: "move assets",
-	setup(build) {
-		const publicPath = build.initialOptions.publicPath ?? "";
-		const destDir = DIST;
+/**
+ * copy assets from ./assets to output path.
+ *
+ * acts as loader for paths beginnign with /assets
+ *   - resolves to ./assets
+ * also acts as a file loader for relative paths ending with the specified extensions.
+ *   - the resolved value is then final asset URL
+ *   - the file is copied to the destination's asset folder
+ *   - if the importer is a javascript/typescript file, the result is a dynamically fetched request
+ * @param mainEntryPoint - main entrypoint of the script. This is required to avoid duplicate work
+ * @param assetsDir - location to save assets
+ * @param extensions - key: extension (with . prefix), value: subdirectory in asset folder
+ */
+const copyAssetsPlugin = (
+	mainEntryPoint: string,
+	assetsDir: string,
+	extensions?: Record<string, string>
+): Plugin => ({
+	name: "copy assets",
+	async setup(build) {
+		const NAMESPACE = "assets";
+		assetsDir = relative(DIR_NAME, assetsDir);
+		const destDir = join(DIST, assetsDir);
+		const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
+		const isMain = entries.some((entry) => entry === mainEntryPoint);
+		const log = getLogger(entries, clc.magenta);
 
+		// copy assets folder (but only if we're the main entrypoint)
+		if (isMain) {
+			build.onStart(async () => {
+				log(`Copying ${assetsDir} => ${destDir}`);
+				await cp(assetsDir, destDir, {
+					dereference: true,
+					preserveTimestamps: true,
+					force: true,
+					recursive: true,
+				});
+			});
+		}
+		/**
+		 * the public path: it needs to start with / since we're copying to root assets directory
+		 */
+		const publicPath =
+			build.initialOptions.publicPath != null
+				? build.initialOptions.publicPath || "/"
+				: "/";
+		// resolve files in the ./assets folder (absolute paths)
 		build.onResolve(
 			{ filter: /^\/assets\//, namespace: "file" },
 			async (args) => {
 				const basePath = args.path.slice(1);
 				const real = realpath(DIR_NAME, basePath);
-				const dest = realpath(destDir, basePath);
-				await cp(real, dest, {
-					dereference: true,
-					preserveTimestamps: true,
-					force: true,
-				});
+				const resolvedPath = join(publicPath, basePath);
+				// don't do anything, since we copied all of the files over in onStart
+				log(`Resolved ${real} => ${resolvedPath}`);
 				return {
-					path: `${publicPath}/${basePath}`,
-					namespace: "assets",
+					path: resolvedPath,
+					namespace: NAMESPACE,
 					watchFiles: [real],
 					external: true,
 				};
 			}
 		);
-	},
-};
 
-const loggerPlugin = (name: string, ignoreRegex = /node_modules/): Plugin => {
-	const log = (...args: unknown[]): void => {
-		console.info(
-			clc.black(clc.bold(clc.bgYellowBright(`[${name}]`))),
-			...args.map((arg) => (typeof arg === "string" ? clc.yellow(arg) : arg))
-		);
-	};
+		if (extensions) {
+			const results: BuildResult["metafile"] = {
+				inputs: {},
+				outputs: {},
+			};
+			const assetNames = build.initialOptions.assetNames ?? "[name]-[hash]";
+			interface CopyResult {
+				resolvedPath: string;
+				filePath: string;
+			}
+			/**
+			 * copy file in `src` to assets folder (in the subdirectory `subDir`)
+			 *
+			 * Respects the `[name]`,`[hash]` placeholders in {BuildOptions.assetNames}
+			 *
+			 * @returns `resolvedPath`: URL of the asset, `filePath`: realpath of the asset
+			 */
+			const copy = async (src: string, subDir: string): Promise<CopyResult> => {
+				/** this is the same hash as esbuild, but probably doesn't matter */
+				const hash = readFile(src)
+					.then((buffer) => xxhash.h32(buffer, 0x10ad1234).toString(32))
+					.then((h) => h.slice(0, 8));
+				const { name, ext } = parsePath(src);
+				const filename = join(
+					subDir,
+					assetNames.replace("[name]", name).replace("[hash]", await hash) + ext
+				);
+				const resolvedPath = join(publicPath, assetsDir, filename);
+				const filePath = join(destDir, filename);
+				// don't force, since don't care if it's already copied
+				await cp(src, filePath, {
+					preserveTimestamps: true,
+				});
+				return {
+					resolvedPath,
+					filePath,
+				};
+			};
+			/** map of realpaths to resolvedPaths */
+			const cache: Map<string, string> = new Map();
+
+			const isExternal: { [kind in ImportKind]: boolean } = {
+				"entry-point": true,
+
+				// css
+				"import-rule": true,
+				"url-token": true,
+
+				// js
+				// we need to handle these to return url to javascript
+				"import-statement": false,
+				"require-call": false,
+				"dynamic-import": false,
+				"require-resolve": false,
+			};
+
+			// register handlers for each supplied extension
+			await Promise.all(
+				Object.entries(extensions).map(async ([ext, subDir]) => {
+					const dest = join(destDir, subDir);
+					await mkdir(dest, { recursive: true });
+
+					const pattern = new RegExp(`\\.${ext.slice(1)}$`);
+					build.onResolve(
+						{ filter: pattern, namespace: "file" },
+						async (args) => {
+							const srcPath = normalizPath(join(args.resolveDir, args.path));
+							const external = isExternal[args.kind];
+							const cachedPath = cache.get(srcPath);
+							if (cachedPath !== undefined) {
+								log(`Resolved cached ${cachedPath}`);
+								return {
+									path: cache.get(srcPath),
+									namespace: NAMESPACE,
+									external,
+									watchFiles: [srcPath],
+								};
+							}
+							const copyresult = copy(srcPath, subDir);
+							const stats = stat(srcPath);
+
+							const relativeInputPath = relative(DIR_NAME, srcPath);
+							results.inputs[relativeInputPath] = {
+								bytes: (await stats).size,
+								imports: [],
+							};
+
+							const { resolvedPath, filePath } = await copyresult;
+
+							results.outputs[relative(DIR_NAME, filePath)] = {
+								bytes: (await stats).size,
+								inputs: {
+									[relativeInputPath]: {
+										bytesInOutput: (await stats).size,
+									},
+								},
+								imports: [],
+								exports: [],
+							};
+
+							cache.set(srcPath, resolvedPath);
+							log(`Resolved ${relativeInputPath} => ${resolvedPath}`);
+							return {
+								path: resolvedPath,
+								namespace: NAMESPACE,
+								external,
+								watchFiles: [srcPath],
+							};
+						}
+					);
+				})
+			);
+
+			build.onLoad({ filter: /()/, namespace: NAMESPACE }, async (args) => {
+				const contents = `
+					const url = ${JSON.stringify(encodeURI(args.path))};
+					export default url; 
+				`;
+				return {
+					contents,
+					loader: "js",
+				};
+			});
+
+			build.onEnd(async (result) => {
+				if (!result.metafile) return;
+				Object.assign(result.metafile.inputs, results.inputs);
+				Object.assign(result.metafile.outputs, results.outputs);
+			});
+		}
+	},
+});
+
+const loggerPlugin = (
+	name: string,
+	ignoreRegex = /node_modules.*\.(js|css|ts|json)$/
+): Plugin => {
+	const log = getLogger(name);
 	const units: Array<[number, string]> = [
 		[0, ""],
 		...Array(3).fill([1, "B"]),
@@ -141,7 +347,7 @@ const loggerPlugin = (name: string, ignoreRegex = /node_modules/): Plugin => {
 								logOutput(
 									clc.bold(
 										formatSizes(inputs[input].bytesInOutput, outputBytes)
-									) + `${input} => ${output}`
+									) + ` ${input} => ${output}`
 								)
 							);
 					}
@@ -161,9 +367,10 @@ const loggerPlugin = (name: string, ignoreRegex = /node_modules/): Plugin => {
 			};
 
 			build.onEnd(async (result) => {
-				const duration = Date.now() - start!.getTime(); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+				const end = Date.now();
 				if (result.metafile != null) logOutputs(result.metafile);
-				log(clc.bold(`Build ${type} took: ${duration}ms`));
+				if (start)
+					log(clc.bold(`Build ${type} took: ${end - start.getTime()}ms`));
 			});
 		},
 	};
@@ -171,7 +378,10 @@ const loggerPlugin = (name: string, ignoreRegex = /node_modules/): Plugin => {
 
 let cleaned = false;
 
-const cleanPlugin = (): Plugin => {
+/**
+ * @param mainEntryPoint
+ */
+const cleanPlugin = (mainEntryPoint?: string): Plugin => {
 	const cleanDist = async (): Promise<void> => {
 		const pending = [];
 		for await (const dir of await opendir(DIST)) {
@@ -185,13 +395,24 @@ const cleanPlugin = (): Plugin => {
 			);
 		}
 		await Promise.all(pending);
+		cleaned = true;
 	};
 	return {
 		name: "clear",
-		async setup() {
-			if (cleaned) return;
-			await cleanDist();
-			cleaned = true;
+		async setup(build) {
+			const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
+			const hasMain = mainEntryPoint !== undefined && mainEntryPoint.length > 0;
+			const isMain =
+				hasMain && entries.some((entry) => entry === mainEntryPoint);
+			if (hasMain && isMain)
+				build.onStart(() => {
+					cleaned = false;
+				});
+			if (!cleaned) {
+				if (!hasMain || isMain) {
+					await cleanDist();
+				}
+			}
 		},
 	};
 };
@@ -209,19 +430,18 @@ const buildOptions: BuildOptions = {
 	minify: !isDev,
 	drop: isDev ? [] : ["debugger", "console"],
 	metafile: true,
+	external: ["/assets/*"],
 
-	loader: {
-		".txt": "text",
-		".ttf": "file",
-		".png": "file",
-	},
 	publicPath: publicPath,
 
 	plugins: [
-		cleanPlugin(),
+		cleanPlugin("src/index.html"),
 		htmlPlugin(),
-		moveAssetsPlugin,
 		renameEntryHtml,
+		copyAssetsPlugin("src/index.html", join(DIR_NAME, "assets"), {
+			".ttf": "fonts",
+			".txt": "examples",
+		}),
 		loggerPlugin("index.html"),
 	],
 };
@@ -244,7 +464,7 @@ async function buildMonaco(): Promise<BuildResult> {
 		outbase: "monaco-editor/esm/",
 		outdir: DIST,
 		metafile: true,
-		publicPath: publicPath,
+		publicPath,
 		plugins: [cleanPlugin(), loggerPlugin("Monaco")],
 	});
 }
