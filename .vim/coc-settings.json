@@ -12,7 +12,8 @@
 		"tsx",
 		"jsx",
 		"json",
-		"markdown"
+		"markdown",
+		"html"
 	],
 	"prettier.onlyUseLocalVersion": true,
 	"prettier.formatterPriority": 100,
