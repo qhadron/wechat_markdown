@@ -61,6 +61,7 @@
 		"monaco-editor": "^0.31.1",
 		"punycode": "^2.1.1",
 		"split.js": "^1.6.4",
+		"terser": "^5.10.0",
 		"ts-node": "^10.4.0",
 		"xxhashjs": "^0.2.2"
 	},

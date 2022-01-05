@@ -9,7 +9,16 @@ import {
 	BuildResult,
 	ImportKind,
 } from "esbuild";
-import { cp, opendir, rename, rm, mkdir, readFile, stat } from "fs/promises";
+import {
+	cp,
+	opendir,
+	rename,
+	rm,
+	mkdir,
+	readFile,
+	stat,
+	writeFile,
+} from "fs/promises";
 import {
 	basename,
 	dirname,
@@ -21,6 +30,7 @@ import {
 } from "path";
 import { fileURLToPath } from "url";
 import xxhash from "xxhashjs";
+import { minify, MinifyOptions } from "terser";
 
 const DIR_NAME = dirname(fileURLToPath(import.meta.url));
 const DIST = join(DIR_NAME, "dist");
@@ -29,6 +39,9 @@ const isDev = process.env.NODE_ENV === "development";
 const isServe = process.argv.some((arg) => arg === "--serve");
 
 const publicPath = isDev ? "" : process.env.PUBLIC_PATH;
+
+const ecmaVersion = 2020;
+const target = [`es${ecmaVersion}`, "chrome96", "firefox95"];
 
 /**
  * returns path of entrypoints, normalized from build options
@@ -291,32 +304,33 @@ const copyAssetsPlugin = (
 	},
 });
 
+const units: Array<[number, string]> = [
+	[0, ""],
+	...Array(3).fill([1, "B"]),
+	...Array(3).fill([1024, "KB"]),
+	...Array(3).fill([1024 * 1024, "MB"]),
+	...Array(3).fill([1024 * 1024 * 1024, "GB"]),
+];
+
+const formatBytes = (bytes: string): string => {
+	const [ratio, unit] = units[bytes.length];
+	const adjusted = Number(bytes) / ratio;
+	return `${adjusted.toPrecision(3)}${unit}`;
+};
+
+const formatSizes = (size: number, totalSize: number): string => {
+	const percent = (100 * size) / totalSize;
+	const formattedPercent = percent < 1 ? "< 1" : percent.toPrecision(3);
+	return `[${formattedPercent.padStart(5)}%: ${formatBytes(
+		size.toString()
+	).padStart(6)}]`;
+};
+
 const loggerPlugin = (
 	name: string,
 	ignoreRegex = /node_modules.*\.(js|css|ts|json)$/
 ): Plugin => {
 	const log = getLogger(name);
-	const units: Array<[number, string]> = [
-		[0, ""],
-		...Array(3).fill([1, "B"]),
-		...Array(3).fill([1024, "KB"]),
-		...Array(3).fill([1024 * 1024, "MB"]),
-		...Array(3).fill([1024 * 1024 * 1024, "GB"]),
-	];
-
-	const formatBytes = (bytes: string): string => {
-		const [ratio, unit] = units[bytes.length];
-		const adjusted = Number(bytes) / ratio;
-		return `${adjusted.toPrecision(3)}${unit}`;
-	};
-
-	const formatSizes = (size: number, totalSize: number): string => {
-		const percent = (100 * size) / totalSize;
-		const formattedPercent = percent < 1 ? "< 1" : percent.toPrecision(3);
-		return `[${formattedPercent.padStart(5)}%: ${formatBytes(
-			size.toString()
-		).padStart(6)}]`;
-	};
 
 	return {
 		name: "logger",
@@ -425,7 +439,7 @@ const buildOptions: BuildOptions = {
 	bundle: true,
 	platform: "browser",
 	sourcemap: isDev,
-	target: ["es2020", "chrome96", "firefox95"],
+	target,
 
 	minify: !isDev,
 	drop: isDev ? [] : ["debugger", "console"],
@@ -451,10 +465,7 @@ if (publicPath !== undefined)
 
 async function buildMonaco(): Promise<BuildResult> {
 	const workerEntryPoints = [
-		"vs/language/json/json.worker.js",
 		"vs/language/css/css.worker.js",
-		"vs/language/html/html.worker.js",
-		"vs/language/typescript/ts.worker.js",
 		"vs/editor/editor.worker.js",
 	];
 	return await build({
@@ -464,13 +475,116 @@ async function buildMonaco(): Promise<BuildResult> {
 		outbase: "monaco-editor/esm/",
 		outdir: DIST,
 		metafile: true,
+		minify: !isDev,
 		publicPath,
 		plugins: [cleanPlugin(), loggerPlugin("Monaco")],
 	});
 }
 
+async function runTerser(results: BuildResult[]): Promise<void> {
+	const log = getLogger("terser");
+
+	const nameCache = {};
+	const options: MinifyOptions = {
+		ecma: ecmaVersion,
+		keep_classnames: false,
+		keep_fnames: false,
+		nameCache,
+		module: false,
+		toplevel: true,
+		compress: {
+			arguments: true,
+			booleans_as_integers: true,
+			drop_console: true,
+			drop_debugger: true,
+			ecma: ecmaVersion,
+			hoist_funs: true,
+			passes: 1,
+			unsafe_arrows: true,
+			unsafe_comps: true,
+			unsafe_Function: true,
+			unsafe_methods: true,
+			unsafe_proto: true,
+		},
+		mangle: {},
+		format: {
+			beautify: false,
+			ecma: ecmaVersion,
+			comments: /license/i,
+			shebang: false,
+		},
+	};
+
+	function notNull<T>(val: T | null | undefined): val is T {
+		if (val === null || val === undefined) return false;
+		return true;
+	}
+
+	function filter(path: string): boolean {
+		const exts = ["js"];
+		if (exts.some((ext) => path.endsWith(ext))) return true;
+		return false;
+	}
+
+	const files: Array<[string, Promise<string>]> = results
+		.map((result) => result.metafile)
+		.filter(notNull)
+		.flatMap((metafile: Metafile) =>
+			Object.keys(metafile.outputs)
+				.filter(filter)
+				.map(
+					(key) =>
+						[key, readFile(key, { encoding: "utf8" })] as [
+							string,
+							Promise<string>
+						]
+				)
+		);
+
+	const sizes = await Promise.all(
+		files.map(async ([path, file]) => {
+			const start = Date.now();
+			log(clc.white(`${path}`));
+			const oldStats = stat(path);
+			const result = await minify(
+				{ path: await file },
+				{
+					...options,
+					nameCache,
+					module: path.endsWith(".esm.js"),
+				}
+			);
+			if (result.code == null) {
+				log(clc.red(`Minify ${path} returned no code!`));
+				return [0, 0];
+			}
+			await writeFile(path, result.code, "utf8");
+			const end = Date.now();
+			const newStats = stat(path);
+			log(
+				formatSizes((await newStats).size, (await oldStats).size),
+				path,
+				`[${end - start}ms]`
+			);
+			return [(await oldStats).size, (await newStats).size];
+		})
+	);
+
+	const [inputSize, outputSize] = sizes.reduce((a, b) => [
+		a[0] + b[0],
+		a[1] + b[1],
+	]);
+
+	log(
+		`Size: ${formatBytes(inputSize.toString())} => ${formatBytes(
+			outputSize.toString()
+		)}`
+	);
+}
+
 async function main(): Promise<void> {
-	await buildMonaco();
+	const buildResults = [];
+	buildResults.push(await buildMonaco());
 	if (isServe) {
 		await serve(
 			{
@@ -480,8 +594,13 @@ async function main(): Promise<void> {
 			},
 			buildOptions
 		);
-	} else {
-		await build(buildOptions);
+		return;
+	}
+
+	buildResults.push(await build(buildOptions));
+
+	if (!isDev) {
+		await runTerser(buildResults);
 	}
 }
 
