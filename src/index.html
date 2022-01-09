@@ -13,6 +13,7 @@
 		/>
 		<script src="src/splits.ts"></script>
 		<script src="src/components/w-title.ts"></script>
+		<script src="src/components/w-filepicker.ts"></script>
 		<script src="src/index.ts" type="module" defer></script>
 	</head>
 	<body>
@@ -21,6 +22,7 @@
 				<div id="editor-container" class="container">
 					<div class="name-holder">
 						<w-title class="name">Markdown</w-title>
+						<w-filepicker accept=".md,text/plain"></w-filepicker>
 					</div>
 					<div
 						id="editor"
@@ -31,6 +33,7 @@
 				<div id="style-container" class="container">
 					<div class="name-holder">
 						<w-title class="name">CSS</w-title>
+						<w-filepicker accept=".css,text/plain"></w-filepicker>
 					</div>
 					<div id="style" data-language="css" class="editor content"></div>
 				</div>
