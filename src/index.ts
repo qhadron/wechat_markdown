@@ -6,6 +6,7 @@ import { OutputType } from "./markdown-it";
 
 import exampleMarkdown from "./examples/example.md.txt";
 import exampleCss from "./examples/example.css.txt";
+import WFilepicker from "./components/w-filepicker";
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion --
  * specified in index.html
@@ -85,12 +86,16 @@ class State {
 	constructor() {
 		console.log("Initializing state...");
 
+		const $editorPicker = document.querySelector(
+			"#editor-container w-filepicker"
+		) as WFilepicker;
 		$editor.onDidChangeModelContent(() => {
 			const model = $editor.getModel();
 			if (model == null) return;
 			this.#markdownSource = model.getValue();
 			this.#maxEditorLines = model.getLineCount();
 			this.maybeRender();
+			$editorPicker.file = null;
 		});
 		$editor.onDidChangeCursorPosition(() => {
 			const model = $editor.getModel();
@@ -98,12 +103,32 @@ class State {
 			const position = $editor.getPosition();
 			if (position != null) this.editorLine = position.lineNumber;
 		});
+		$editorPicker.addEventListener("change", (_) => {
+			if (!$editorPicker.file) return;
+			const contents = utils.readFileText($editorPicker.file);
+			if (!contents) return;
+			void contents.then((contents) => {
+				this.markdownSource = contents;
+			});
+		});
 
+		const $stylePicker = document.querySelector(
+			"#style-container w-filepicker"
+		) as WFilepicker;
 		$style.onDidChangeModelContent(() => {
 			const model = $style.getModel();
 			if (model == null) return;
 			this.#cssSource = model.getValue();
 			this.maybeRender();
+			$stylePicker.file = null;
+		});
+		$stylePicker.addEventListener("change", (_) => {
+			if (!$stylePicker.file) return;
+			const contents = utils.readFileText($stylePicker.file);
+			if (!contents) return;
+			void contents.then((contents) => {
+				this.cssSource = contents;
+			});
 		});
 
 		$viewSelect.addEventListener("change", () => {

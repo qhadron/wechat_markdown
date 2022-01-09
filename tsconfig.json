@@ -2,6 +2,16 @@
 	"include": ["src/**/*", "build.ts"],
 	"exclude": ["node_modules"],
 	"compilerOptions": {
+		"experimentalDecorators": true,
+		"plugins": [
+			{
+				"name": "ts-lit-plugin",
+				"strict": true
+			}
+		],
+
+		"useDefineForClassFields": false,
+
 		/* Visit https://aka.ms/tsconfig.json to read more about this file */
 
 		/* Language and Environment */

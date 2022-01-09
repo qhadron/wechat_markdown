@@ -16,7 +16,7 @@
 		"sourceType": "module",
 		"project": "./tsconfig.json"
 	},
-	"plugins": ["@typescript-eslint"],
+	"plugins": ["@typescript-eslint", "eslint-plugin-lit"],
 	"rules": {
 		"@typescript-eslint/no-unused-vars": [
 			"error",
@@ -25,6 +25,15 @@
 		"@typescript-eslint/strict-boolean-expressions": [
 			"error",
 			{ "allowString": true, "allowNumber": true }
-		]
-	}
+		],
+		"@typescript-eslint/explicit-function-return-type": "off"
+	},
+	"overrides": [
+		{
+			"files": ["src/components/*.ts"],
+			"rules": {
+				"@typescript-eslint/explicit-module-boundary-types": "off"
+			}
+		}
+	]
 }

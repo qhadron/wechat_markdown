@@ -450,7 +450,10 @@ const buildOptions: BuildOptions = {
 
 	plugins: [
 		cleanPlugin("src/index.html"),
-		htmlPlugin(),
+		htmlPlugin({
+			scriptsTarget: target,
+			modulesTarget: target,
+		}),
 		renameEntryHtml,
 		copyAssetsPlugin("src/index.html", join(DIR_NAME, "assets"), {
 			".ttf": "fonts",

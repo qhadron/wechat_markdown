@@ -11,7 +11,11 @@
 		"build-dev": "NODE_ENV=development node --loader ts-node/esm ./build.ts",
 		"build-prod": "NODE_ENV=production node --loader ts-node/esm ./build.ts",
 		"dist": "yarn run build-prod && tar -C ./dist -czvf dist.tar.gz .",
-		"lint": "prettier --check . && eslint --cache . && tsc --noEmit",
+		"lint:prettier": "prettier --check .",
+		"lint:eslint": "eslint --cache .",
+		"lint:tsc": "tsc --noEmit",
+		"lint:lit": "lit-analyzer --strict",
+		"lint": "yarn run lint:prettier && yarn run lint:eslint && yarn run lint:tsc ",
 		"fix": "prettier --write . ; eslint --cache --fix .",
 		"postinstall": "husky install",
 		"prepublishOnly": "pinst --disable",
@@ -31,13 +35,17 @@
 		"eslint-config-standard-with-typescript": "latest",
 		"eslint-import-resolver-node": "^0.3.6",
 		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-lit": "^1.6.1",
 		"eslint-plugin-node": "^11.1.0",
 		"eslint-plugin-promise": "^5.0.0",
 		"husky": ">=6",
 		"lint-staged": ">=10",
+		"lit-analyzer": "^1.2.1",
 		"pinst": ">=2",
 		"prettier": "^2.5.1",
-		"typescript": "<4.5.0"
+		"ts-lit-plugin": "^1.2.1",
+		"typescript": "<4.5.0",
+		"typescript-lit-html-plugin": "^0.9.0"
 	},
 	"dependencies": {
 		"@chialab/esbuild-plugin-html": "^0.14.10",
@@ -47,6 +55,7 @@
 		"dompurify": "^2.3.4",
 		"esbuild": "^0.14.10",
 		"juice": "^8.0.0",
+		"lit": "^2.1.1",
 		"markdown-it": "^12.3.0",
 		"markdown-it-abbr": "^1.0.4",
 		"markdown-it-container": "^3.0.0",
@@ -69,7 +78,10 @@
 		"node": ">=16"
 	},
 	"lint-staged": {
-		"*.{js,ts}": "eslint --cache --fix",
+		"*.{js,ts}": [
+			"eslint --cache --fix",
+			"yarn run lint:lit"
+		],
 		"*.{js,ts,css,md,json,html}": "prettier --write"
 	}
 }

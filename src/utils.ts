@@ -114,3 +114,17 @@ export function scrollToLine(
 }
 
 export const colorizeElement = monaco.editor.colorizeElement;
+
+export function readFileText(file?: File): Promise<string> | undefined {
+	if (!file) return;
+	const reader = new FileReader();
+	return new Promise((resolve, reject) => {
+		reader.addEventListener("load", () => {
+			resolve(reader.result as string);
+		});
+		reader.addEventListener("error", () => {
+			reject(reader.error);
+		});
+		reader.readAsText(file);
+	});
+}

@@ -12,6 +12,7 @@
 		"tsx",
 		"jsx",
 		"json",
+		"jsonc",
 		"markdown",
 		"html"
 	],

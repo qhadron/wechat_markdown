@@ -12,13 +12,18 @@
 			href="/wechat_markdown/vs/language/css/css.worker.js"
 		/>
 		<script src="src/splits.ts"></script>
+		<script src="src/components/w-title.ts"></script>
+		<script src="src/components/w-filepicker.ts"></script>
 		<script src="src/index.ts" type="module" defer></script>
 	</head>
 	<body>
 		<main>
 			<section id="editing">
 				<div id="editor-container" class="container">
-					<h1 class="name">Markdown</h1>
+					<div class="name-holder">
+						<w-title class="name">Markdown</w-title>
+						<w-filepicker accept=".md,text/plain"></w-filepicker>
+					</div>
 					<div
 						id="editor"
 						data-language="markdown"
@@ -26,14 +31,17 @@
 					></div>
 				</div>
 				<div id="style-container" class="container">
-					<h1 class="name">CSS</h1>
+					<div class="name-holder">
+						<w-title class="name">CSS</w-title>
+						<w-filepicker accept=".css,text/plain"></w-filepicker>
+					</div>
 					<div id="style" data-language="css" class="editor content"></div>
 				</div>
 			</section>
 			<section id="output">
 				<div id="output-container" class="container">
-					<div>
-						<h1 class="name">Output</h1>
+					<div class="name-holder">
+						<w-title class="name">Output</w-title>
 						<select name="view" id="view">
 							<option selected value="preview">Preview</option>
 							<option value="source">Source</option>
