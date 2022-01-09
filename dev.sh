@@ -10,7 +10,7 @@ SESSION_NAME="wechat_markdown_dev"
 TMUX_COMMANDS=(
 	new-session -c "$SCRIPT_DIR" -s "$SESSION_NAME";
 	set-option -w remain-on-exit on \;
-	split-window -h -c "$SCRIPT_DIR" zsh -c 'source ~/.zshrc; yarn run start' \;
+	split-window -h -c "$SCRIPT_DIR" zsh -c 'source ~/.zshrc; yarn run serve' \;
 	set-option -w remain-on-exit on \;
 	select-layout even-horizontal \;
 	kill-pane -t "{left}" \;	
