@@ -45,9 +45,8 @@ main > * {
 	min-height: var(--title-height);
 }
 
-.container .name {
-	margin-inline: 1em;
-	margin-block: 0.2em;
+.container h1.name,
+w-title::part(name) {
 	display: inline;
 	font-size: 2em;
 	height: var(--title-height);
@@ -65,4 +64,14 @@ main > * {
 	font-display: block;
 	src: url(../node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.ttf)
 		format("truetype");
+}
+
+.name-holder {
+	display: flex;
+	margin-inline: 1em;
+	margin-block: 0.2em;
+}
+
+.name-holder w-title {
+	flex-grow: 1;
 }
