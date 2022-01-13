@@ -14,6 +14,7 @@
 		<script src="src/splits.ts"></script>
 		<script src="src/components/w-title.ts"></script>
 		<script src="src/components/w-filepicker.ts"></script>
+		<script src="src/components/w-filesaver.ts"></script>
 		<script src="src/index.ts" type="module" defer></script>
 	</head>
 	<body>
@@ -23,6 +24,7 @@
 					<div class="name-holder">
 						<w-title class="name">Markdown</w-title>
 						<w-filepicker accept=".md,text/plain"></w-filepicker>
+						<w-filesaver for="editor"></w-filesaver>
 					</div>
 					<div
 						id="editor"
@@ -34,6 +36,7 @@
 					<div class="name-holder">
 						<w-title class="name">CSS</w-title>
 						<w-filepicker accept=".css,text/plain"></w-filepicker>
+						<w-filesaver for="style"></w-filesaver>
 					</div>
 					<div id="style" data-language="css" class="editor content"></div>
 				</div>
@@ -42,6 +45,7 @@
 				<div id="output-container" class="container">
 					<div class="name-holder">
 						<w-title class="name">Output</w-title>
+						<w-filesaver for="preview"></w-filesaver>
 						<select name="view" id="view">
 							<option selected value="preview">Preview</option>
 							<option value="source">Source</option>

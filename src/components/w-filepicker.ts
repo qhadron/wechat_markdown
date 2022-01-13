@@ -8,11 +8,6 @@ const tag = "w-filepicker";
 @customElement(tag)
 export default class WFilepicker extends LitElement {
 	static override styles = css`
-		:host {
-			display: block;
-			margin: 5px 0px;
-		}
-
 		#chooser {
 			height: 100%;
 		}

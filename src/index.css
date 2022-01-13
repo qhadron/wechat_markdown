@@ -75,3 +75,8 @@ w-title::part(name) {
 .name-holder w-title {
 	flex-grow: 1;
 }
+
+w-filepicker,
+w-filesaver {
+	margin: 5px 2px;
+}

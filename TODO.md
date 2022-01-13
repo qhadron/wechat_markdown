@@ -14,11 +14,15 @@
 - [x] allow custom CSS to be used for styling
   - styles are inlined using `juice`
 - [ ] in-browser persistent storage
-- [ ] import/export of markdown/CSS/HTML files
+- [x] import/export of markdown/CSS/HTML files
+  - [x] import is implemented with a load picker
+  - [x] export is implemented with a file saver
+- [ ] offline usage, similar to [this](https://youtu.be/sOq92prx00w)
 
 # Other
 
 - [x] add `eslint` and `prettier` to build/commit process
-- [ ] ~~fix `monaco` builds (font not resolved correctly, missing some component..., check docs again?)~~
+- [x] ~~fix `monaco` builds (font not resolved correctly, missing some component..., check docs again?)~~
   - this is probably caused by `esbuild-html` not resolving assets in `css` included from `js` files correctly.
     See https://github.com/chialab/rna/issues/38
+  - [x] added a custom build step that resolves and copies assets properly

@@ -36,7 +36,7 @@ export const makeMd = (additionalPlugins: PluginSimple[] = []): MarkdownIt => {
 	return md;
 };
 
-export enum OutputType {
+export const enum OutputType {
 	preview = "preview",
 	source = "source",
 }

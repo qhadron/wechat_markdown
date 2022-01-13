@@ -160,6 +160,39 @@ class State {
 			});
 		});
 
+		document.querySelector("#editing")?.addEventListener("saveFile", (e) => {
+			const { save, target } = e.detail;
+
+			const { text, filename } = (() => {
+				switch (target) {
+					case "editor":
+						return { text: this.markdownSource, filename: "wechat.md" };
+					case "style":
+						return { text: this.cssSource, filename: "wechat.css" };
+				}
+				throw new Error(
+					`Wrong attribute for=${target ?? "???"} on file save event`
+				);
+			})();
+
+			if (!text) return;
+
+			const blob = new Blob([text], {
+				type: "text/plain;charset=utf-8",
+			});
+			save(blob, filename);
+		});
+
+		document
+			.querySelector("#output w-filesaver")
+			?.addEventListener("saveFile", (e) => {
+				const { save } = e.detail;
+				const blob = new Blob([this.generateSource(OutputType.source)], {
+					type: "text/plain;charset=utf-8",
+				});
+				save(blob, "wechat.html");
+			});
+
 		this.loadExamples();
 
 		console.log("Initialized state!");
@@ -189,19 +222,21 @@ class State {
 		this.maybeRender.flush();
 	}
 
-	#renderOutput(): void {
+	generateSource(type: OutputType = this.#view): string {
 		const markdownText = this.markdownSource;
-		const html = utils.generateHtml(markdownText, this.#view);
+		const html = utils.generateHtml(markdownText, type);
 		const cssText = this.cssSource;
-
 		const style = `<style>${cssText}</style>`;
+		return utils.generateSource(html, style);
+	}
 
+	#renderOutput(): void {
+		const source = this.generateSource();
 		switch (this.view) {
 			case "preview": {
 				if ($preview.contentDocument == null) return;
 				$preview.contentDocument.open();
-				$preview.contentDocument.write(style);
-				$preview.contentDocument.write(html);
+				$preview.contentDocument.write(source);
 				$preview.contentDocument.close();
 				// make external links open in new window
 				$preview.contentDocument.querySelectorAll("a").forEach(($link) => {
@@ -222,7 +257,7 @@ class State {
 				break;
 			}
 			case "source": {
-				$source.textContent = utils.generateSource(html, style);
+				$source.textContent = source;
 				void utils.colorizeElement($source, {});
 				break;
 			}

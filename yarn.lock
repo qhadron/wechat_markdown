@@ -264,6 +264,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/file-saver@npm:^2":
+  version: 2.0.5
+  resolution: "@types/file-saver@npm:2.0.5"
+  checksum: a31d6ee2abf99598647139f8f35b37b6e1bacf6c7ddf05c66651b9b0e6e53381aa0e8ed13f37faa6e496e0eb1da87c97e6c70fd589d5b83b0c95c57cb64ce92a
+  languageName: node
+  linkType: hard
+
 "@types/json-schema@npm:*, @types/json-schema@npm:^7.0.7":
   version: 7.0.9
   resolution: "@types/json-schema@npm:7.0.9"
@@ -2032,6 +2039,13 @@ eslint-config-standard-with-typescript@latest:
   dependencies:
     flat-cache: ^3.0.4
   checksum: f49701feaa6314c8127c3c2f6173cfefff17612f5ed2daaafc6da13b5c91fd43e3b2a58fd0d63f9f94478a501b167615931e7200e31485e320f74a33885a9c74
+  languageName: node
+  linkType: hard
+
+"file-saver@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "file-saver@npm:2.0.5"
+  checksum: c62d96e5cebc58b4bdf3ae8a60d5cf9607ad82f75f798c33a4ee63435ac2203002584d5256a2a780eda7feb5e19dc3b6351c2212e58b3f529e63d265a7cc79f7
   languageName: node
   linkType: hard
 
@@ -4720,6 +4734,7 @@ eslint-config-standard-with-typescript@latest:
     "@types/debounce": ^1
     "@types/dompurify": ^2
     "@types/eslint": ^8
+    "@types/file-saver": ^2
     "@types/markdown-it": ^12
     "@types/node": ^17.0.7
     "@types/xxhashjs": ^0
@@ -4737,6 +4752,7 @@ eslint-config-standard-with-typescript@latest:
     eslint-plugin-lit: ^1.6.1
     eslint-plugin-node: ^11.1.0
     eslint-plugin-promise: ^5.0.0
+    file-saver: ^2.0.5
     husky: ">=6"
     juice: ^8.0.0
     lint-staged: ">=10"
