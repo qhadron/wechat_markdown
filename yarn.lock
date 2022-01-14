@@ -224,36 +224,36 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/cli-color@npm:^2":
+"@types/cli-color@npm:^2.0.2":
   version: 2.0.2
   resolution: "@types/cli-color@npm:2.0.2"
   checksum: 255b57b6072ca09416987e37d01c20161115e2ed5e7e72166df15cc69c932e54e603200c86b1f6769eea13aec6fe128b1ed553f00b21f46d0ef7f2ed336fd100
   languageName: node
   linkType: hard
 
-"@types/debounce@npm:^1":
+"@types/debounce@npm:^1.2.1":
   version: 1.2.1
   resolution: "@types/debounce@npm:1.2.1"
   checksum: bea6d414acefbee50adfe87cee10f8a855d033e4778567ab03bdc3cb2648b6bf9237ca53f4ee76fe4be75f77f86d4688411499626fe409bc870f53631d24231f
   languageName: node
   linkType: hard
 
-"@types/dompurify@npm:^2":
-  version: 2.3.2
-  resolution: "@types/dompurify@npm:2.3.2"
+"@types/dompurify@npm:^2.3.3":
+  version: 2.3.3
+  resolution: "@types/dompurify@npm:2.3.3"
   dependencies:
     "@types/trusted-types": "*"
-  checksum: 757390676c95edc516770a42e36defd6bfd15959bc4f7a1bf546bf82963174c01461c49b5997b0a395810eef457480f885c473e14749bd9646b667e2898942da
+  checksum: 427e2dc60d94d13d7860a293b926b376727cb2f545a3334a3f2e7de695a2bb23058dd15108e49e0651378229b443ee8ae0028034b6f2df9a9008c04fb7ad6f8f
   languageName: node
   linkType: hard
 
-"@types/eslint@npm:^8":
-  version: 8.2.1
-  resolution: "@types/eslint@npm:8.2.1"
+"@types/eslint@npm:^8.2.2":
+  version: 8.2.2
+  resolution: "@types/eslint@npm:8.2.2"
   dependencies:
     "@types/estree": "*"
     "@types/json-schema": "*"
-  checksum: f32753ba184c212056f2bb7ee16937150a36e01da7eed15e2e179b7df76d0bbcbfa49972f30e9336f22be471c7f67fd91bcc8c25ff532462598de0f489df0cd8
+  checksum: acbbaecea2675b63cc4b067df499bb15906a56379a3603a9f6afffe2eb688b30bb73b1f5a402e44de36c5dc76abf59027a9f557b171d0b544ad01fa333118b6b
   languageName: node
   linkType: hard
 
@@ -264,7 +264,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/file-saver@npm:^2":
+"@types/file-saver@npm:^2.0.5":
   version: 2.0.5
   resolution: "@types/file-saver@npm:2.0.5"
   checksum: a31d6ee2abf99598647139f8f35b37b6e1bacf6c7ddf05c66651b9b0e6e53381aa0e8ed13f37faa6e496e0eb1da87c97e6c70fd589d5b83b0c95c57cb64ce92a
@@ -292,7 +292,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/markdown-it@npm:^12":
+"@types/markdown-it@npm:^12.2.3":
   version: 12.2.3
   resolution: "@types/markdown-it@npm:12.2.3"
   dependencies:
@@ -309,17 +309,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
+"@types/node@npm:*, @types/node@npm:^17.0.8":
   version: 17.0.8
   resolution: "@types/node@npm:17.0.8"
   checksum: f4cadeb9e602027520abc88c77142697e33cf6ac98bb02f8b595a398603cbd33df1f94d01c055c9f13cde0c8eaafc5e396ca72645458d42b4318b845bc7f1d0f
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^17.0.7":
-  version: 17.0.7
-  resolution: "@types/node@npm:17.0.7"
-  checksum: 3cb3024f8c12152f609fabadd66d55e1b02f2a1fd61ae859755d493f01f0e15e66f71784e2f1dac57133415083a426effd12210eb4ed4f2a35d190836eb789ae
   languageName: node
   linkType: hard
 
@@ -330,7 +323,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/xxhashjs@npm:^0":
+"@types/xxhashjs@npm:^0.2.2":
   version: 0.2.2
   resolution: "@types/xxhashjs@npm:0.2.2"
   dependencies:
@@ -1378,154 +1371,154 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild-android-arm64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-android-arm64@npm:0.14.10"
+"esbuild-android-arm64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-android-arm64@npm:0.14.11"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-darwin-64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-darwin-64@npm:0.14.10"
+"esbuild-darwin-64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-darwin-64@npm:0.14.11"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-darwin-arm64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-darwin-arm64@npm:0.14.10"
+"esbuild-darwin-arm64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-darwin-arm64@npm:0.14.11"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-freebsd-64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-freebsd-64@npm:0.14.10"
+"esbuild-freebsd-64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-freebsd-64@npm:0.14.11"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-freebsd-arm64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-freebsd-arm64@npm:0.14.10"
+"esbuild-freebsd-arm64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-freebsd-arm64@npm:0.14.11"
   conditions: os=freebsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-linux-32@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-linux-32@npm:0.14.10"
+"esbuild-linux-32@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-linux-32@npm:0.14.11"
   conditions: os=linux & cpu=ia32
   languageName: node
   linkType: hard
 
-"esbuild-linux-64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-linux-64@npm:0.14.10"
+"esbuild-linux-64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-linux-64@npm:0.14.11"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-linux-arm64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-linux-arm64@npm:0.14.10"
+"esbuild-linux-arm64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-linux-arm64@npm:0.14.11"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-linux-arm@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-linux-arm@npm:0.14.10"
+"esbuild-linux-arm@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-linux-arm@npm:0.14.11"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"esbuild-linux-mips64le@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-linux-mips64le@npm:0.14.10"
+"esbuild-linux-mips64le@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-linux-mips64le@npm:0.14.11"
   conditions: os=linux & cpu=mips64el
   languageName: node
   linkType: hard
 
-"esbuild-linux-ppc64le@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-linux-ppc64le@npm:0.14.10"
+"esbuild-linux-ppc64le@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-linux-ppc64le@npm:0.14.11"
   conditions: os=linux & cpu=ppc64
   languageName: node
   linkType: hard
 
-"esbuild-linux-s390x@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-linux-s390x@npm:0.14.10"
+"esbuild-linux-s390x@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-linux-s390x@npm:0.14.11"
   conditions: os=linux & cpu=s390x
   languageName: node
   linkType: hard
 
-"esbuild-netbsd-64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-netbsd-64@npm:0.14.10"
+"esbuild-netbsd-64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-netbsd-64@npm:0.14.11"
   conditions: os=netbsd & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-openbsd-64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-openbsd-64@npm:0.14.10"
+"esbuild-openbsd-64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-openbsd-64@npm:0.14.11"
   conditions: os=openbsd & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-sunos-64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-sunos-64@npm:0.14.10"
+"esbuild-sunos-64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-sunos-64@npm:0.14.11"
   conditions: os=sunos & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-windows-32@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-windows-32@npm:0.14.10"
+"esbuild-windows-32@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-windows-32@npm:0.14.11"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"esbuild-windows-64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-windows-64@npm:0.14.10"
+"esbuild-windows-64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-windows-64@npm:0.14.11"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-windows-arm64@npm:0.14.10":
-  version: 0.14.10
-  resolution: "esbuild-windows-arm64@npm:0.14.10"
+"esbuild-windows-arm64@npm:0.14.11":
+  version: 0.14.11
+  resolution: "esbuild-windows-arm64@npm:0.14.11"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.14.10":
-  version: 0.14.10
-  resolution: "esbuild@npm:0.14.10"
+"esbuild@npm:^0.14.11":
+  version: 0.14.11
+  resolution: "esbuild@npm:0.14.11"
   dependencies:
-    esbuild-android-arm64: 0.14.10
-    esbuild-darwin-64: 0.14.10
-    esbuild-darwin-arm64: 0.14.10
-    esbuild-freebsd-64: 0.14.10
-    esbuild-freebsd-arm64: 0.14.10
-    esbuild-linux-32: 0.14.10
-    esbuild-linux-64: 0.14.10
-    esbuild-linux-arm: 0.14.10
-    esbuild-linux-arm64: 0.14.10
-    esbuild-linux-mips64le: 0.14.10
-    esbuild-linux-ppc64le: 0.14.10
-    esbuild-linux-s390x: 0.14.10
-    esbuild-netbsd-64: 0.14.10
-    esbuild-openbsd-64: 0.14.10
-    esbuild-sunos-64: 0.14.10
-    esbuild-windows-32: 0.14.10
-    esbuild-windows-64: 0.14.10
-    esbuild-windows-arm64: 0.14.10
+    esbuild-android-arm64: 0.14.11
+    esbuild-darwin-64: 0.14.11
+    esbuild-darwin-arm64: 0.14.11
+    esbuild-freebsd-64: 0.14.11
+    esbuild-freebsd-arm64: 0.14.11
+    esbuild-linux-32: 0.14.11
+    esbuild-linux-64: 0.14.11
+    esbuild-linux-arm: 0.14.11
+    esbuild-linux-arm64: 0.14.11
+    esbuild-linux-mips64le: 0.14.11
+    esbuild-linux-ppc64le: 0.14.11
+    esbuild-linux-s390x: 0.14.11
+    esbuild-netbsd-64: 0.14.11
+    esbuild-openbsd-64: 0.14.11
+    esbuild-sunos-64: 0.14.11
+    esbuild-windows-32: 0.14.11
+    esbuild-windows-64: 0.14.11
+    esbuild-windows-arm64: 0.14.11
   dependenciesMeta:
     esbuild-android-arm64:
       optional: true
@@ -1565,7 +1558,7 @@ __metadata:
       optional: true
   bin:
     esbuild: bin/esbuild
-  checksum: 0e42a74afa79f8f096d338415b6661410fb656ce0d8ea6f48ccbd943d383e01d946dc9124e366db7dc9deb02b924c6788a68d690a1aa28365e891102450e8ae5
+  checksum: dd034f76fa180ae947a458d84cd3ad4989f1630bc55f092f35d562c18480e56ed0ede99752ffc13d341434ff09063110c765243a4d46244ea2422f2683dbd822
   languageName: node
   linkType: hard
 
@@ -1601,7 +1594,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-eslint-config-standard-with-typescript@latest:
+"eslint-config-standard-with-typescript@npm:latest":
   version: 21.0.1
   resolution: "eslint-config-standard-with-typescript@npm:21.0.1"
   dependencies:
@@ -2371,7 +2364,7 @@ eslint-config-standard-with-typescript@latest:
   languageName: node
   linkType: hard
 
-"husky@npm:>=6":
+"husky@npm:^7.0.4":
   version: 7.0.4
   resolution: "husky@npm:7.0.4"
   bin:
@@ -2884,9 +2877,9 @@ eslint-config-standard-with-typescript@latest:
   languageName: node
   linkType: hard
 
-"lint-staged@npm:>=10":
-  version: 12.1.5
-  resolution: "lint-staged@npm:12.1.5"
+"lint-staged@npm:^12.1.7":
+  version: 12.1.7
+  resolution: "lint-staged@npm:12.1.7"
   dependencies:
     cli-truncate: ^3.1.0
     colorette: ^2.0.16
@@ -2903,7 +2896,7 @@ eslint-config-standard-with-typescript@latest:
     yaml: ^1.10.2
   bin:
     lint-staged: bin/lint-staged.js
-  checksum: e4d64e97769faf45adad9898c843ed8ef495469fc3edef0b8daff834ddb504ab47e33579763f8d85cbba6db993bd5cd86ac0bcaf92f6fd7486d4fb9a5fe774c6
+  checksum: 3d0757706c8b0ca3f004bb2ffa89a9d5fc97ccdebfa4cde29a9636c661538780e194b99cbc5e4b8b89b13986187b33c97e009b09014511bbd45ee05ba557d0eb
   languageName: node
   linkType: hard
 
@@ -3104,7 +3097,7 @@ eslint-config-standard-with-typescript@latest:
   languageName: node
   linkType: hard
 
-"markdown-it-inject-linenumbers@https://github.com/digitalmoksha/markdown-it-inject-linenumbers.git":
+"markdown-it-inject-linenumbers@https://github.com/digitalmoksha/markdown-it-inject-linenumbers.git#commit=6ee88c78ac7e74c8a0d3176c19eef76a95138fdf":
   version: 0.2.0
   resolution: "markdown-it-inject-linenumbers@https://github.com/digitalmoksha/markdown-it-inject-linenumbers.git#commit=6ee88c78ac7e74c8a0d3176c19eef76a95138fdf"
   checksum: ae33265e5916ddf2d34d2da1d05797aaee345be551b79232c877aec26cab8076a3e96ce563eeb95058a096abeff85d81b604155acc3e78dcfd6225906e99d3f6
@@ -3139,9 +3132,9 @@ eslint-config-standard-with-typescript@latest:
   languageName: node
   linkType: hard
 
-"markdown-it@npm:^12.3.0":
-  version: 12.3.0
-  resolution: "markdown-it@npm:12.3.0"
+"markdown-it@npm:^12.3.2":
+  version: 12.3.2
+  resolution: "markdown-it@npm:12.3.2"
   dependencies:
     argparse: ^2.0.1
     entities: ~2.1.0
@@ -3150,7 +3143,7 @@ eslint-config-standard-with-typescript@latest:
     uc.micro: ^1.0.5
   bin:
     markdown-it: bin/markdown-it.js
-  checksum: 27af2c2d0ee564ca2bb417514414a4d202a5caa966361fb88525f8a53740a734389f1d59b7d53ac66574b659628d03914b43eda6d58b7eb5ce9c41a758c84fb1
+  checksum: 890555711c1c00fa03b936ca2b213001a3b9b37dea140d8445ae4130ce16628392aad24b12e2a0a9935336ca5951f2957a38f4e5309a2e38eab44e25ff32a41e
   languageName: node
   linkType: hard
 
@@ -3625,7 +3618,7 @@ eslint-config-standard-with-typescript@latest:
   languageName: node
   linkType: hard
 
-"pinst@npm:>=2":
+"pinst@npm:^2.1.6":
   version: 2.1.6
   resolution: "pinst@npm:2.1.6"
   dependencies:
@@ -4070,10 +4063,10 @@ eslint-config-standard-with-typescript@latest:
   languageName: node
   linkType: hard
 
-"split.js@npm:^1.6.4":
-  version: 1.6.4
-  resolution: "split.js@npm:1.6.4"
-  checksum: acfa00637af8777e358651717da17deaedcac17def053a925bd9ccbeaf6fd57eb62f3b3e7f8bd3df0948d30f7faa4498e224c22a95b8deda558fadd1e0058971
+"split.js@npm:^1.6.5":
+  version: 1.6.5
+  resolution: "split.js@npm:1.6.5"
+  checksum: a3e77d8e0628de06c58e2d8e6ab41872132586c417b4f40ac3d3dbf76c2b31f40745dd86c133609dacd5599ada5d4bee157f6290403223b86bd79fe700a77983
   languageName: node
   linkType: hard
 
@@ -4215,15 +4208,15 @@ eslint-config-standard-with-typescript@latest:
   linkType: hard
 
 "table@npm:^6.0.9":
-  version: 6.7.5
-  resolution: "table@npm:6.7.5"
+  version: 6.8.0
+  resolution: "table@npm:6.8.0"
   dependencies:
     ajv: ^8.0.1
     lodash.truncate: ^4.4.2
     slice-ansi: ^4.0.0
     string-width: ^4.2.3
     strip-ansi: ^6.0.1
-  checksum: 76d01e33d6ef881f21bfe2e343101cb05ef4cedf506523d187af4f3a33f0f69cf25bca3e05c0c5c0eb348b405aaac29d9bb308ba9bf2c5ca7a82d032382a1649
+  checksum: 5b07fe462ee03d2e1fac02cbb578efd2e0b55ac07e3d3db2e950aa9570ade5a4a2b8d3c15e9f25c89e4e50b646bc4269934601ee1eef4ca7968ad31960977690
   languageName: node
   linkType: hard
 
@@ -4730,20 +4723,20 @@ eslint-config-standard-with-typescript@latest:
   resolution: "wechat_markdown@workspace:."
   dependencies:
     "@chialab/esbuild-plugin-html": ^0.14.10
-    "@types/cli-color": ^2
-    "@types/debounce": ^1
-    "@types/dompurify": ^2
-    "@types/eslint": ^8
-    "@types/file-saver": ^2
-    "@types/markdown-it": ^12
-    "@types/node": ^17.0.7
-    "@types/xxhashjs": ^0
+    "@types/cli-color": ^2.0.2
+    "@types/debounce": ^1.2.1
+    "@types/dompurify": ^2.3.3
+    "@types/eslint": ^8.2.2
+    "@types/file-saver": ^2.0.5
+    "@types/markdown-it": ^12.2.3
+    "@types/node": ^17.0.8
+    "@types/xxhashjs": ^0.2.2
     "@typescript-eslint/eslint-plugin": ^4.0.1
     "@typescript-eslint/parser": ^4.0.0
     cli-color: ^2.0.1
     debounce: ^1.2.1
     dompurify: ^2.3.4
-    esbuild: ^0.14.10
+    esbuild: ^0.14.11
     eslint: ^7.12.1
     eslint-config-prettier: ^8.3.0
     eslint-config-standard-with-typescript: latest
@@ -4753,27 +4746,27 @@ eslint-config-standard-with-typescript@latest:
     eslint-plugin-node: ^11.1.0
     eslint-plugin-promise: ^5.0.0
     file-saver: ^2.0.5
-    husky: ">=6"
+    husky: ^7.0.4
     juice: ^8.0.0
-    lint-staged: ">=10"
+    lint-staged: ^12.1.7
     lit: ^2.1.1
     lit-analyzer: ^1.2.1
-    markdown-it: ^12.3.0
+    markdown-it: ^12.3.2
     markdown-it-abbr: ^1.0.4
     markdown-it-container: ^3.0.0
     markdown-it-deflist: ^2.1.0
     markdown-it-emoji: ^2.0.0
     markdown-it-footnote: ^3.0.3
-    markdown-it-inject-linenumbers: "https://github.com/digitalmoksha/markdown-it-inject-linenumbers.git"
+    markdown-it-inject-linenumbers: "https://github.com/digitalmoksha/markdown-it-inject-linenumbers.git#commit=6ee88c78ac7e74c8a0d3176c19eef76a95138fdf"
     markdown-it-ins: ^3.0.1
     markdown-it-mark: ^3.0.1
     markdown-it-sub: ^1.0.0
     markdown-it-sup: ^1.0.0
     monaco-editor: ^0.31.1
-    pinst: ">=2"
+    pinst: ^2.1.6
     prettier: ^2.5.1
     punycode: ^2.1.1
-    split.js: ^1.6.4
+    split.js: ^1.6.5
     terser: ^5.10.0
     ts-lit-plugin: ^1.2.1
     ts-node: ^10.4.0
