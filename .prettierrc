@@ -1,8 +1,0 @@
-# vim: set filetype=yaml:
-useTabs: true
-semi: true
-endOfLine: "lf"
-overrides:
-  - files: "*.md"
-    options:
-      tabWidth: 2

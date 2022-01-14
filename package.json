@@ -86,5 +86,24 @@
 			"yarn run lint:lit"
 		],
 		"*.{js,ts,css,md,json,html}": "prettier --write"
+	},
+	"prettier": {
+		"useTabs": true,
+		"semi": true,
+		"endOfLine": "lf",
+		"overrides": [
+			{
+				"files": "*.md",
+				"options": {
+					"tabWidth": 2
+				}
+			},
+			{
+				"files": "src/components/*.ts",
+				"options": {
+					"htmlWhitespaceSensitivity": "css"
+				}
+			}
+		]
 	}
 }
