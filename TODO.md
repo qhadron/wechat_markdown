@@ -18,6 +18,7 @@
   - [x] import is implemented with a load picker
   - [x] export is implemented with a file saver
 - [ ] offline usage, similar to [this](https://youtu.be/sOq92prx00w)
+- [ ] code formatting
 
 # Other
 
@@ -26,3 +27,4 @@
   - this is probably caused by `esbuild-html` not resolving assets in `css` included from `js` files correctly.
     See https://github.com/chialab/rna/issues/38
   - [x] added a custom build step that resolves and copies assets properly
+  - [x] add a custom build step based on [monaco-editor-webpack-plugin](https://github.com/microsoft/monaco-editor/tree/fc603de98e7dcd1ad6587ce3ad80431c567f9275/webpack-plugin) to reduce `monaco` code size

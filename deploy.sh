@@ -2,6 +2,10 @@
 # vim: set ft=zsh :
 set -euo pipefail
 
+SCRIPT_DIR="${0:a:h}"
+
+cd "$SCRIPT_DIR"
+
 remote_host=${1:-jack@192.168.0.99}
 remote_path=${2:-\~/www/wechat_markdown}
 if [[ $# -gt 2 ]]; then

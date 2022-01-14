@@ -3,11 +3,12 @@ import clc from "cli-color";
 import {
 	build,
 	serve,
-	Plugin,
+	Plugin as EsBuildPlugin,
 	BuildOptions,
 	Metafile,
 	BuildResult,
 	ImportKind,
+	PluginBuild,
 } from "esbuild";
 import {
 	cp,
@@ -26,11 +27,12 @@ import {
 	relative,
 	resolve as realpath,
 	parse as parsePath,
-	normalize as normalizPath,
+	normalize as normalizePath,
 } from "path";
 import { fileURLToPath } from "url";
 import xxhash from "xxhashjs";
 import { minify, MinifyOptions } from "terser";
+import MonacoMeta from "monaco-editor/esm/metadata.js";
 
 const DIR_NAME = dirname(fileURLToPath(import.meta.url));
 const DIST = join(DIR_NAME, "dist");
@@ -39,9 +41,14 @@ const isDev = process.env.NODE_ENV === "development";
 const isServe = process.argv.some((arg) => arg === "--serve");
 
 const publicPath = isDev ? "" : process.env.PUBLIC_PATH;
+const generateSourceMap = isDev || isServe;
 
 const ecmaVersion = 2020;
 const target = [`es${ecmaVersion}`, "chrome96", "firefox95"];
+
+function nonNull<T>(x: Array<T | undefined | null>): T[] {
+	return x.filter(Boolean) as T[];
+}
 
 /**
  * returns path of entrypoints, normalized from build options
@@ -50,9 +57,7 @@ function normalizeEntryPoints(
 	entryPoints: BuildOptions["entryPoints"]
 ): string[] {
 	const entries =
-		entryPoints instanceof Array
-			? entryPoints
-			: Object.values(entryPoints ?? {});
+		entryPoints instanceof Array ? entryPoints : Object.keys(entryPoints ?? {});
 	return entries ?? [];
 }
 
@@ -75,9 +80,20 @@ function getLogger(name: string | BuildOptions | string[], color = clc.yellow) {
 	};
 }
 
+/** this is the same hash as esbuild, but probably doesn't matter */
+function getFileHash(contents: string | Buffer | ArrayBuffer) {
+	return xxhash.h32(contents, 0x10ad1234).toString(32).slice(0, 8);
+}
+
+interface Plugin {
+	name: EsBuildPlugin["name"];
+	setup?: EsBuildPlugin["setup"];
+	onMain?: (build: PluginBuild) => Promise<void> | void;
+}
+
 const renameEntryHtml: Plugin = {
-	name: "rename entry html",
-	setup(build) {
+	name: "remove entry hash",
+	onMain(build) {
 		build.initialOptions.metafile = true;
 		const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
 		if (entries.length > 0) {
@@ -87,10 +103,11 @@ const renameEntryHtml: Plugin = {
 				if (result.metafile == null) return;
 				await Promise.all(
 					Object.entries(result.metafile.outputs).map(
-						async ([out, { inputs }]) => {
+						async ([out, { inputs, ...rest }]) => {
+							// counterintuitively, entryPoint is not set for the actual entry point (html file)
+							if ("entryPoint" in rest) return;
 							const entry = entries.find((x) => x in inputs);
-							if (entry == null || entry.length === 0)
-								return await Promise.resolve();
+							if (entry == null || entry.length === 0) return;
 							const dest = join(DIST, basename(entry));
 							if (result.metafile == null) return await Promise.resolve();
 							const oldStats = result.metafile.outputs[out];
@@ -108,44 +125,89 @@ const renameEntryHtml: Plugin = {
 };
 
 /**
- * copy assets from ./assets to output path.
+ * Calls `{Plugin.onMain}` when this plugin is ran from the main entry point.
+ * All `{Plugin.setup}` functions are called as normal.
  *
+ * this is useful since the htmlPlugin calls everything all the time.
+ */
+const callOnMain = (
+	mainEntryPoint: string | ((opts: BuildOptions) => boolean),
+	plugins: Plugin[]
+): EsBuildPlugin[] => {
+	const mainPlugin: EsBuildPlugin = {
+		name: "run on main",
+		async setup(build) {
+			const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
+			const isMain =
+				typeof mainEntryPoint === "string"
+					? entries.some((entry) => entry === mainEntryPoint)
+					: mainEntryPoint(build.initialOptions);
+			if (isMain) {
+				for (const plugin of plugins) {
+					mainPlugin.name = plugin.name;
+					await plugin.onMain?.(build);
+				}
+			}
+		},
+	};
+	return [
+		mainPlugin,
+		...nonNull(plugins.map((p) => p.setup && (p as EsBuildPlugin))).map(
+			(p) => ({
+				name: p.name,
+				setup: p.setup,
+			})
+		),
+	];
+};
+
+/**
+ * copy assets from ./assets to output path.
+ * @param assetsDir - location to save assets
+ */
+const copyAssetsPlugin = (assetsDir: string): Plugin => ({
+	name: "copy assets",
+	async onMain(build) {
+		assetsDir = relative(DIR_NAME, assetsDir);
+		const destDir = join(DIST, assetsDir);
+		const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
+		const log = getLogger(entries, clc.magenta);
+
+		// copy assets folder (but only if we're the main entrypoint)
+		build.onStart(async () => {
+			log(`Copying ${assetsDir} => ${destDir}`);
+			await cp(assetsDir, destDir, {
+				dereference: true,
+				preserveTimestamps: true,
+				force: true,
+				recursive: true,
+			});
+		});
+	},
+});
+
+/**
  * acts as loader for paths beginnign with /assets
  *   - resolves to ./assets
  * also acts as a file loader for relative paths ending with the specified extensions.
  *   - the resolved value is then final asset URL
  *   - the file is copied to the destination's asset folder
  *   - if the importer is a javascript/typescript file, the result is a dynamically fetched request
- * @param mainEntryPoint - main entrypoint of the script. This is required to avoid duplicate work
  * @param assetsDir - location to save assets
  * @param extensions - key: extension (with . prefix), value: subdirectory in asset folder
  */
-const copyAssetsPlugin = (
-	mainEntryPoint: string,
+const resolveAssetsPlugin = (
 	assetsDir: string,
-	extensions?: Record<string, string>
-): Plugin => ({
-	name: "copy assets",
+	extensions: Record<string, string>
+): EsBuildPlugin => ({
+	name: "resolve assets",
 	async setup(build) {
-		const NAMESPACE = "assets";
 		assetsDir = relative(DIR_NAME, assetsDir);
 		const destDir = join(DIST, assetsDir);
-		const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
-		const isMain = entries.some((entry) => entry === mainEntryPoint);
-		const log = getLogger(entries, clc.magenta);
+		const NAMESPACE = "assets";
 
-		// copy assets folder (but only if we're the main entrypoint)
-		if (isMain) {
-			build.onStart(async () => {
-				log(`Copying ${assetsDir} => ${destDir}`);
-				await cp(assetsDir, destDir, {
-					dereference: true,
-					preserveTimestamps: true,
-					force: true,
-					recursive: true,
-				});
-			});
-		}
+		const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
+		const log = getLogger(entries, clc.magenta);
 		/**
 		 * the public path: it needs to start with / since we're copying to root assets directory
 		 */
@@ -155,152 +217,149 @@ const copyAssetsPlugin = (
 				: "/";
 		// resolve files in the ./assets folder (absolute paths)
 		build.onResolve(
-			{ filter: /^\/assets\//, namespace: "file" },
+			// eslint-disable-next-line prefer-regex-literals -- avoids escaping
+			{ filter: new RegExp(`^/assets/`) },
 			async (args) => {
-				const basePath = args.path.slice(1);
+				const basePath = args.path.slice(0);
 				const real = realpath(DIR_NAME, basePath);
 				const resolvedPath = join(publicPath, basePath);
 				// don't do anything, since we copied all of the files over in onStart
 				log(`Resolved ${real} => ${resolvedPath}`);
 				return {
 					path: resolvedPath,
-					namespace: NAMESPACE,
+					namespace: "copied-assets",
 					watchFiles: [real],
 					external: true,
 				};
 			}
 		);
 
-		if (extensions) {
-			const results: BuildResult["metafile"] = {
-				inputs: {},
-				outputs: {},
+		const results: BuildResult["metafile"] = {
+			inputs: {},
+			outputs: {},
+		};
+		const assetNames = build.initialOptions.assetNames ?? "[name]-[hash]";
+		interface CopyResult {
+			resolvedPath: string;
+			filePath: string;
+		}
+		/**
+		 * copy file in `src` to assets folder (in the subdirectory `subDir`)
+		 *
+		 * Respects the `[name]`,`[hash]` placeholders in {BuildOptions.assetNames}
+		 *
+		 * @returns `resolvedPath`: URL of the asset, `filePath`: realpath of the asset
+		 */
+		const copy = async (src: string, subDir: string): Promise<CopyResult> => {
+			/** this is the same hash as esbuild, but probably doesn't matter */
+			const hash = readFile(src).then(getFileHash);
+			const { name, ext } = parsePath(src);
+			const filename = join(
+				subDir,
+				assetNames.replace("[name]", name).replace("[hash]", await hash) + ext
+			);
+			const resolvedPath = join(publicPath, assetsDir, filename);
+			const filePath = join(destDir, filename);
+			// don't force, since don't care if it's already copied
+			await cp(src, filePath, {
+				preserveTimestamps: true,
+			});
+			return {
+				resolvedPath,
+				filePath,
 			};
-			const assetNames = build.initialOptions.assetNames ?? "[name]-[hash]";
-			interface CopyResult {
-				resolvedPath: string;
-				filePath: string;
-			}
-			/**
-			 * copy file in `src` to assets folder (in the subdirectory `subDir`)
-			 *
-			 * Respects the `[name]`,`[hash]` placeholders in {BuildOptions.assetNames}
-			 *
-			 * @returns `resolvedPath`: URL of the asset, `filePath`: realpath of the asset
-			 */
-			const copy = async (src: string, subDir: string): Promise<CopyResult> => {
-				/** this is the same hash as esbuild, but probably doesn't matter */
-				const hash = readFile(src)
-					.then((buffer) => xxhash.h32(buffer, 0x10ad1234).toString(32))
-					.then((h) => h.slice(0, 8));
-				const { name, ext } = parsePath(src);
-				const filename = join(
-					subDir,
-					assetNames.replace("[name]", name).replace("[hash]", await hash) + ext
-				);
-				const resolvedPath = join(publicPath, assetsDir, filename);
-				const filePath = join(destDir, filename);
-				// don't force, since don't care if it's already copied
-				await cp(src, filePath, {
-					preserveTimestamps: true,
-				});
-				return {
-					resolvedPath,
-					filePath,
-				};
-			};
-			/** map of realpaths to resolvedPaths */
-			const cache: Map<string, string> = new Map();
+		};
+		/** map of realpaths to resolvedPaths */
+		const cache: Map<string, string> = new Map();
 
-			const isExternal: { [kind in ImportKind]: boolean } = {
-				"entry-point": true,
+		const isExternal: { [kind in ImportKind]: boolean } = {
+			"entry-point": true,
 
-				// css
-				"import-rule": true,
-				"url-token": true,
+			// css
+			"import-rule": true,
+			"url-token": true,
 
-				// js
-				// we need to handle these to return url to javascript
-				"import-statement": false,
-				"require-call": false,
-				"dynamic-import": false,
-				"require-resolve": false,
-			};
+			// js
+			// we need to handle these to return url to javascript
+			"import-statement": false,
+			"require-call": false,
+			"dynamic-import": false,
+			"require-resolve": false,
+		};
 
-			// register handlers for each supplied extension
-			await Promise.all(
-				Object.entries(extensions).map(async ([ext, subDir]) => {
-					const dest = join(destDir, subDir);
-					await mkdir(dest, { recursive: true });
+		// register handlers for each supplied extension
+		await Promise.all(
+			Object.entries(extensions).map(async ([ext, subDir]) => {
+				const dest = join(destDir, subDir);
+				await mkdir(dest, { recursive: true });
 
-					const pattern = new RegExp(`\\.${ext.slice(1)}$`);
-					build.onResolve(
-						{ filter: pattern, namespace: "file" },
-						async (args) => {
-							const srcPath = normalizPath(join(args.resolveDir, args.path));
-							const external = isExternal[args.kind];
-							const cachedPath = cache.get(srcPath);
-							if (cachedPath !== undefined) {
-								log(`Resolved cached ${cachedPath}`);
-								return {
-									path: cache.get(srcPath),
-									namespace: NAMESPACE,
-									external,
-									watchFiles: [srcPath],
-								};
-							}
-							const copyresult = copy(srcPath, subDir);
-							const stats = stat(srcPath);
-
-							const relativeInputPath = relative(DIR_NAME, srcPath);
-							results.inputs[relativeInputPath] = {
-								bytes: (await stats).size,
-								imports: [],
-							};
-
-							const { resolvedPath, filePath } = await copyresult;
-
-							results.outputs[relative(DIR_NAME, filePath)] = {
-								bytes: (await stats).size,
-								inputs: {
-									[relativeInputPath]: {
-										bytesInOutput: (await stats).size,
-									},
-								},
-								imports: [],
-								exports: [],
-							};
-
-							cache.set(srcPath, resolvedPath);
-							log(`Resolved ${relativeInputPath} => ${resolvedPath}`);
+				const pattern = new RegExp(`\\.${ext.slice(1)}$`);
+				build.onResolve(
+					{ filter: pattern, namespace: "file" },
+					async (args) => {
+						const srcPath = normalizePath(join(args.resolveDir, args.path));
+						const external = isExternal[args.kind];
+						const cachedPath = cache.get(srcPath);
+						if (cachedPath !== undefined) {
+							log(`Resolved cached ${cachedPath}`);
 							return {
-								path: resolvedPath,
+								path: cache.get(srcPath),
 								namespace: NAMESPACE,
 								external,
 								watchFiles: [srcPath],
 							};
 						}
-					);
-				})
-			);
+						const copyresult = copy(srcPath, subDir);
+						const stats = stat(srcPath);
 
-			build.onLoad({ filter: /()/, namespace: NAMESPACE }, async (args) => {
-				const contents = `
+						const relativeInputPath = relative(DIR_NAME, srcPath);
+						results.inputs[relativeInputPath] = {
+							bytes: (await stats).size,
+							imports: [],
+						};
+
+						const { resolvedPath, filePath } = await copyresult;
+
+						results.outputs[relative(DIR_NAME, filePath)] = {
+							bytes: (await stats).size,
+							inputs: {
+								[relativeInputPath]: {
+									bytesInOutput: (await stats).size,
+								},
+							},
+							imports: [],
+							exports: [],
+						};
+
+						cache.set(srcPath, resolvedPath);
+						log(`Resolved ${relativeInputPath} => ${resolvedPath}`);
+						return {
+							path: resolvedPath,
+							namespace: NAMESPACE,
+							external,
+							watchFiles: [srcPath],
+						};
+					}
+				);
+			})
+		);
+
+		build.onLoad({ filter: /()/, namespace: NAMESPACE }, async (args) => {
+			const contents = `
 					const url = ${JSON.stringify(encodeURI(args.path))};
-					export default url; 
-				`;
-				return {
-					contents,
-					loader: "js",
-				};
-			});
+					export default url;
+					`;
+			return {
+				contents,
+				loader: "js",
+			};
+		});
 
-			build.onEnd(async (result) => {
-				if (!result.metafile) return;
-				Object.assign(result.metafile.inputs, results.inputs);
-				Object.assign(result.metafile.outputs, results.outputs);
-			});
-		}
+		build.onEnd(async (result) => {
+			if (!result.metafile) return;
+			Object.assign(result.metafile.inputs, results.inputs);
+			Object.assign(result.metafile.outputs, results.outputs);
+		});
 	},
 });
 
@@ -329,9 +388,8 @@ const formatSizes = (size: number, totalSize: number): string => {
 const loggerPlugin = (
 	name: string,
 	ignoreRegex = /node_modules.*\.(js|css|ts|json)$/
-): Plugin => {
+): EsBuildPlugin => {
 	const log = getLogger(name);
-
 	return {
 		name: "logger",
 		setup(build) {
@@ -347,7 +405,13 @@ const loggerPlugin = (
 				}
 			});
 
-			const shouldIgnore = (path: string): boolean => ignoreRegex.test(path);
+			const entryPoints = normalizeEntryPoints(
+				build.initialOptions.entryPoints
+			);
+
+			const shouldIgnore = (path: string): boolean =>
+				ignoreRegex.test(path) &&
+				!entryPoints.some((entry) => path.includes(entry));
 
 			const logOutputs = (metafile: Metafile): void => {
 				const PREFIX = "  ";
@@ -383,19 +447,247 @@ const loggerPlugin = (
 			build.onEnd(async (result) => {
 				const end = Date.now();
 				if (result.metafile != null) logOutputs(result.metafile);
-				if (start)
-					log(clc.bold(`Build ${type} took: ${end - start.getTime()}ms`));
+				const fmt =
+					result.errors.length + result.warnings.length
+						? clc.bold.red
+						: clc.bold;
+				if (start) log(fmt(`Build ${type} took: ${end - start.getTime()}ms`));
 			});
 		},
 	};
 };
 
-let cleaned = false;
-
 /**
- * @param mainEntryPoint
+ * Builds (a subset of) monaco and stores it in `outPath`.
+ *
+ * Resolves `monaco-editor` to the javascript path, and `monaco-editor/css`
+ * to the css path.
+ *
+ * The generated monaco build takes care of worker URLs as well.
+ *
+ * @param features - subset of monaco features
+ * @param languages - subset of monaco's languages
+ * @param plugins - plugins to use while building monaco
+ * @param outPath - destination for monaco file, relative to DIST
  */
-const cleanPlugin = (mainEntryPoint?: string): Plugin => {
+const externalMonacoPlugin = (
+	features: MonacoMeta.EditorFeature[],
+	languages: MonacoMeta.EditorLanguage[],
+	plugins: Plugin[] = [],
+	outPath: string = join("assets", "monaco", "monaco.esm.js")
+): Plugin => {
+	const MONACO_INSTALL = "monaco-editor/esm";
+
+	const featuresById = Object.fromEntries(
+		MonacoMeta.features.map(
+			(feature) => [feature.label as MonacoMeta.EditorFeature, feature] as const
+		)
+	);
+	const languagesById = Object.fromEntries(
+		MonacoMeta.languages.map(
+			(feature) => [feature.label as MonacoMeta.EditorFeature, feature] as const
+		)
+	);
+
+	const featurePaths = nonNull(
+		features.map((id) => featuresById[id]).flatMap((x) => x.entry)
+	);
+	const languagePaths = nonNull(
+		languages.map((id) => languagesById[id]).flatMap((x) => x.entry)
+	);
+	const workerPaths = [
+		...nonNull(
+			languages.map((id) => languagesById[id]).map((x) => x.worker?.entry)
+		),
+		"vs/editor/editor.worker",
+	];
+	const resolveMonacoPath = (path: string) =>
+		`${DIR_NAME}/node_modules/${MONACO_INSTALL}/${path}${
+			path.endsWith(".js") ? "" : ".js"
+		}`;
+
+	/**
+	 * The main name needs to be passed from the real build to resolvers
+	 * (i.e. between 2 plugins), so this is the easiest way to do that.
+	 */
+	const deferredMainName: {
+		promise?: Promise<string>;
+		resolve?: (_: string) => void;
+	} = {};
+	// eslint-disable-next-line @typescript-eslint/promise-function-async
+	const mainName = (() => {
+		deferredMainName.promise = new Promise<string>((resolve) => {
+			deferredMainName.resolve = resolve;
+		});
+		return deferredMainName.promise;
+	})();
+
+	return {
+		name: "external-monaco",
+		async setup(build) {
+			const log = getLogger("monaco-resolver");
+			build.onResolve(
+				{ filter: /^:?monaco-editor(?:\/css)?/ },
+				async (args) => {
+					const ext = args.path.endsWith("/css") ? "css" : "js";
+					const resolvedPath = `${buildOptions.publicPath ?? ""}/${dirname(
+						outPath
+					)}/${await mainName}.${ext}`;
+					log(`Resolved ${args.path} => ${resolvedPath}, ${args.kind}`);
+					return {
+						path: resolvedPath,
+						external: true,
+					};
+				}
+			);
+		},
+		async onMain(build) {
+			const subBuild = (async () => {
+				const entry = basename(outPath, ".js");
+				const outdir = normalizePath(join(DIST, dirname(outPath)));
+				// a real file on disk is required for esbuild to emit output
+				const tempFile = join(DIST, "monaco.tmp.js");
+				await writeFile(tempFile, `export * from ":monaco-entrypoint:"`);
+
+				const publicPath = buildOptions.publicPath ?? "";
+
+				const generateImport = (path: string) => `import "${path}";`;
+
+				/**
+				 * @see https://github.com/microsoft/monaco-editor/blob/bfb6a42e3de96fdc7a2ee4e5c6bbfad8b463efbc/webpack-plugin/src/index.ts#L282
+				 * @see https://github.com/microsoft/monaco-editor/blob/bfb6a42e3de96fdc7a2ee4e5c6bbfad8b463efbc/webpack-plugin/src/loaders/include.ts#L30
+				 *
+				 * Note: language aliases aren't set up for workers (i.e. css, scss, less all have the same worker)
+				 */
+				const mainFileContents = [
+					...featurePaths.map(generateImport),
+					`
+					import * as monaco from "vs/editor/editor.api";
+					declare global {
+						interface Window {
+							MonacoEnvironment: monaco.Environment;
+						}
+					}
+
+					self.MonacoEnvironment = {
+						getWorkerUrl: function (moduleId, label) {
+							${nonNull(
+								languages
+									.map((id) => languagesById[id])
+									.map((language) => {
+										if (!language.worker) return null;
+										return `
+										if (label === "${language.label}") {
+											return "${publicPath}/${dirname(outPath)}/${language.worker.entry}.js";
+										}
+									`;
+									})
+							).join("\n")}
+							return "${publicPath}/assets/monaco/vs/editor/editor.worker.js";
+						},
+					};
+					export * from "vs/editor/editor.api";
+					`,
+					...languagePaths.map(generateImport),
+				]
+					.join("\n")
+					.split("\n")
+					.map((line) => line.trim())
+					.join("\n");
+
+				const hash = getFileHash(mainFileContents);
+
+				const entryName = `${entry}.${hash}`;
+
+				deferredMainName.resolve?.(`${entryName}`);
+
+				const entryPoints = {
+					[entryName]: tempFile,
+					...Object.fromEntries(workerPaths.map((p) => [p, `worker:${p}`])),
+				};
+
+				const subBuild = build.esbuild.build({
+					...build.initialOptions,
+					entryPoints,
+					bundle: true,
+					format: "esm",
+					outdir,
+					metafile: true,
+					plugins: callOnMain(entry, [
+						{
+							name: "monaco-build",
+							setup(build) {
+								const monacoBase = join(
+									DIR_NAME,
+									"node_modules",
+									MONACO_INSTALL
+								);
+
+								build.onResolve({ filter: /^:monaco-entrypoint:$/ }, (args) => {
+									return {
+										path: args.path,
+										namespace: "monaco-entry",
+									};
+								});
+
+								build.onResolve(
+									{ filter: /()/, namespace: "monaco-entry" },
+									async (args) => {
+										const path = args.path.startsWith(".")
+											? args.path
+											: "./" + args.path;
+										const result = await build.resolve(path, {
+											namespace: "file",
+											resolveDir: monacoBase,
+										});
+										result.path = normalizePath(result.path);
+										return result;
+									}
+								);
+
+								build.onResolve({ filter: /^worker:/ }, (args) => {
+									const path = normalizePath(
+										resolveMonacoPath(args.path.substr(7))
+									);
+									return { path };
+								});
+
+								build.onLoad(
+									{ filter: /()/, namespace: "monaco-entry" },
+									() => {
+										return {
+											contents: mainFileContents,
+											loader: "ts",
+										};
+									}
+								);
+
+								build.onEnd(async () => await rm(tempFile));
+							},
+						},
+						...plugins,
+						loggerPlugin("monaco-build"),
+					]),
+				});
+
+				const subResults = await subBuild;
+				return subResults;
+			})();
+
+			build.onEnd(async (results) => {
+				const subResults = await subBuild;
+				results.warnings.push(...subResults.warnings);
+				results.errors.push(...subResults.errors);
+				if (!results.metafile) return;
+				if (!subResults.metafile) return;
+				Object.assign(results.metafile.inputs, subResults.metafile.inputs);
+				Object.assign(results.metafile.outputs, subResults.metafile.outputs);
+			});
+		},
+	};
+};
+
+const cleanPlugin = (): Plugin => {
 	const cleanDist = async (): Promise<void> => {
 		const pending = [];
 		for await (const dir of await opendir(DIST)) {
@@ -409,24 +701,11 @@ const cleanPlugin = (mainEntryPoint?: string): Plugin => {
 			);
 		}
 		await Promise.all(pending);
-		cleaned = true;
 	};
 	return {
 		name: "clear",
-		async setup(build) {
-			const entries = normalizeEntryPoints(build.initialOptions.entryPoints);
-			const hasMain = mainEntryPoint !== undefined && mainEntryPoint.length > 0;
-			const isMain =
-				hasMain && entries.some((entry) => entry === mainEntryPoint);
-			if (hasMain && isMain)
-				build.onStart(() => {
-					cleaned = false;
-				});
-			if (!cleaned) {
-				if (!hasMain || isMain) {
-					await cleanDist();
-				}
-			}
+		async onMain() {
+			await cleanDist();
 		},
 	};
 };
@@ -438,7 +717,7 @@ const buildOptions: BuildOptions = {
 
 	bundle: true,
 	platform: "browser",
-	sourcemap: isDev,
+	sourcemap: generateSourceMap,
 	target,
 
 	minify: !isDev,
@@ -448,41 +727,59 @@ const buildOptions: BuildOptions = {
 
 	publicPath: publicPath,
 
-	plugins: [
-		cleanPlugin("src/index.html"),
-		htmlPlugin({
-			scriptsTarget: target,
-			modulesTarget: target,
-		}),
-		renameEntryHtml,
-		copyAssetsPlugin("src/index.html", join(DIR_NAME, "assets"), {
-			".ttf": "fonts",
-			".txt": "examples",
-		}),
-		loggerPlugin("index.html"),
-	],
+	plugins: callOnMain(
+		// just checking entry point name isn't enough:
+		// the js build also starts with index.html
+		(opts) => {
+			return (
+				normalizeEntryPoints(opts.entryPoints)[0] === "src/index.html" &&
+				basename(opts.outdir ?? "") === "dist"
+			);
+		},
+		[
+			cleanPlugin(),
+			htmlPlugin({
+				scriptsTarget: target,
+				modulesTarget: target,
+			}),
+			renameEntryHtml,
+			copyAssetsPlugin(join(DIR_NAME, "assets")),
+			resolveAssetsPlugin(join(DIR_NAME, "assets"), {
+				".txt": "examples",
+			}),
+			externalMonacoPlugin(
+				// to enable all features: MonacoMeta.features.map((feat) => feat.label as EditorFeature),
+				[
+					"contextmenu",
+					"clipboard",
+					"colorPicker",
+					"comment",
+					"bracketMatching",
+					"dnd",
+					"find",
+					"inPlaceReplace",
+					"folding",
+					"hover",
+					"parameterHints",
+					"smartSelect",
+					"suggest",
+					"wordOperations",
+					"wordPartOperations",
+				],
+				["css", "markdown"],
+				[
+					resolveAssetsPlugin(join(DIR_NAME, "assets"), {
+						".ttf": "fonts",
+					}),
+				]
+			),
+			loggerPlugin("main"),
+		]
+	),
 };
 
 if (publicPath !== undefined)
 	console.log(clc.yellow(clc.bold("public path is: ", publicPath)));
-
-async function buildMonaco(): Promise<BuildResult> {
-	const workerEntryPoints = [
-		"vs/language/css/css.worker.js",
-		"vs/editor/editor.worker.js",
-	];
-	return await build({
-		entryPoints: workerEntryPoints.map((entry) => `monaco-editor/esm/${entry}`),
-		bundle: true,
-		format: "iife",
-		outbase: "monaco-editor/esm/",
-		outdir: DIST,
-		metafile: true,
-		minify: !isDev,
-		publicPath,
-		plugins: [cleanPlugin(), loggerPlugin("Monaco")],
-	});
-}
 
 async function runTerser(results: BuildResult[]): Promise<void> {
 	const log = getLogger("terser");
@@ -523,25 +820,19 @@ async function runTerser(results: BuildResult[]): Promise<void> {
 		return true;
 	}
 
+	const exts = ["js"];
 	function filter(path: string): boolean {
-		const exts = ["js"];
 		if (exts.some((ext) => path.endsWith(ext))) return true;
 		return false;
 	}
 
-	const files: Array<[string, Promise<string>]> = results
+	const files = results
 		.map((result) => result.metafile)
 		.filter(notNull)
 		.flatMap((metafile: Metafile) =>
 			Object.keys(metafile.outputs)
 				.filter(filter)
-				.map(
-					(key) =>
-						[key, readFile(key, { encoding: "utf8" })] as [
-							string,
-							Promise<string>
-						]
-				)
+				.map((key) => [key, readFile(key, { encoding: "utf8" })] as const)
 		);
 
 	const sizes = await Promise.all(
@@ -555,13 +846,24 @@ async function runTerser(results: BuildResult[]): Promise<void> {
 					...options,
 					nameCache,
 					module: path.endsWith(".esm.js"),
+					sourceMap: generateSourceMap
+						? {
+								url: `/${relative(DIST, `${path}.map`)}`,
+								content: await readFile(`${path}.map`, { encoding: "utf8" }),
+						  }
+						: undefined,
 				}
 			);
 			if (result.code == null) {
 				log(clc.red(`Minify ${path} returned no code!`));
 				return [0, 0];
 			}
-			await writeFile(path, result.code, "utf8");
+			const writes = [];
+			if (result.map != null) {
+				writes.push(writeFile(`${path}.map`, result.map as string, "utf8"));
+			}
+			writes.push(writeFile(path, result.code, "utf8"));
+			await Promise.all(writes);
 			const end = Date.now();
 			const newStats = stat(path);
 			log(
@@ -586,8 +888,6 @@ async function runTerser(results: BuildResult[]): Promise<void> {
 }
 
 async function main(): Promise<void> {
-	const buildResults = [];
-	buildResults.push(await buildMonaco());
 	if (isServe) {
 		await serve(
 			{
@@ -600,11 +900,11 @@ async function main(): Promise<void> {
 		return;
 	}
 
-	buildResults.push(await build(buildOptions));
+	const buildResults = await build(buildOptions);
 
 	if (!isDev) {
-		await runTerser(buildResults);
+		await runTerser([buildResults]);
 	}
 }
 
-void main();
+main().catch(() => process.exit(1));
