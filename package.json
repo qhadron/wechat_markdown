@@ -85,6 +85,7 @@
 			"eslint --cache --fix",
 			"yarn run lint:lit"
 		],
+		"*.ts": "yarn run lint:tsc",
 		"*.{js,ts,css,md,json,html}": "prettier --write"
 	},
 	"prettier": {
