@@ -258,7 +258,7 @@ class State {
 			}
 			case "source": {
 				$source.textContent = source;
-				void utils.colorizeElement($source, {});
+				void Editor.colorizeElement($source, {});
 				break;
 			}
 		}

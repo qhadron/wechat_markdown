@@ -59,13 +59,6 @@ w-title::part(name) {
 	height: calc(100% - var(--title-height));
 }
 
-@font-face {
-	font-family: "joke's on you!";
-	font-display: block;
-	src: url(../node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.ttf)
-		format("truetype");
-}
-
 .name-holder {
 	display: flex;
 	margin-inline: 1em;

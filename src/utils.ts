@@ -1,7 +1,6 @@
 import { md, OutputType } from "./markdown-it";
 import juice from "juice";
 import DOMPurify from "dompurify";
-import * as monaco from "monaco-editor";
 
 export function selectAll(element: HTMLElement): void {
 	const range = new Range();
@@ -112,8 +111,6 @@ export function scrollToLine(
 
 	return scroll($window, offset - $preview.clientHeight * ratio);
 }
-
-export const colorizeElement = monaco.editor.colorizeElement;
 
 export function readFileText(file?: File): Promise<string> | undefined {
 	if (!file) return;
