@@ -12,7 +12,7 @@ export default class WTitle extends LitElement {
 	`;
 
 	override render() {
-		return html`<h1 part="name"><slot></slot></h1> `;
+		return html`<h1 part="name"><slot></slot></h1>`;
 	}
 }
 

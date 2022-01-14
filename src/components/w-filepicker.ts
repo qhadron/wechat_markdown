@@ -1,6 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import { ref, createRef, Ref } from "lit/directives/ref.js";
+import { customElement, property, query } from "lit/decorators.js";
 import { ifDefined } from "lit/directives/if-defined.js";
 
 const tag = "w-filepicker";
@@ -23,7 +22,8 @@ export default class WFilepicker extends LitElement {
 	@property({ reflect: true })
 	accept: string | undefined;
 
-	inputRef: Ref<HTMLInputElement> = createRef();
+	@query("#input")
+	input!: HTMLInputElement;
 
 	override render() {
 		const fileDisplay = this.file ? `Picked: ${this.file.name}` : "";
@@ -32,15 +32,17 @@ export default class WFilepicker extends LitElement {
 			<button id="chooser" @click=${this.choose}>
 				<slot>Load</slot>
 			</button>
-			<input type="file" id="input" ${ref(this.inputRef)} @change=${
-			this.picked
-		} accept=${ifDefined(this.accept)} ></input>
+			<input
+				type="file"
+				id="input"
+				@change=${this.picked}
+				accept=${ifDefined(this.accept)}
+			/>
 		`;
 	}
 
 	choose() {
-		const $input = this.inputRef.value;
-		$input?.click();
+		this.input.click();
 	}
 
 	picked(e: Event) {

@@ -71,7 +71,10 @@ w-title::part(name) {
 	flex-grow: 1;
 }
 
-w-filepicker,
-w-filesaver {
+.controls {
 	margin: 5px 2px;
+}
+
+.controls > * {
+	height: 100%;
 }

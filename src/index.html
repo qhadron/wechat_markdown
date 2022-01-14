@@ -18,8 +18,10 @@
 				<div id="editor-container" class="container">
 					<div class="name-holder">
 						<w-title class="name">Markdown</w-title>
-						<w-filepicker accept=".md,text/plain"></w-filepicker>
-						<w-filesaver for="editor"></w-filesaver>
+						<div class="controls">
+							<w-filepicker accept=".md,text/plain"></w-filepicker>
+							<w-filesaver for="editor"></w-filesaver>
+						</div>
 					</div>
 					<div
 						id="editor"
@@ -30,8 +32,10 @@
 				<div id="style-container" class="container">
 					<div class="name-holder">
 						<w-title class="name">CSS</w-title>
-						<w-filepicker accept=".css,text/plain"></w-filepicker>
-						<w-filesaver for="style"></w-filesaver>
+						<div class="controls">
+							<w-filepicker accept=".css,text/plain"></w-filepicker>
+							<w-filesaver for="style"></w-filesaver>
+						</div>
 					</div>
 					<div id="style" data-language="css" class="editor content"></div>
 				</div>
@@ -40,11 +44,13 @@
 				<div id="output-container" class="container">
 					<div class="name-holder">
 						<w-title class="name">Output</w-title>
-						<w-filesaver for="preview"></w-filesaver>
-						<select name="view" id="view">
-							<option selected value="preview">Preview</option>
-							<option value="source">Source</option>
-						</select>
+						<div class="controls">
+							<w-filesaver for="preview"></w-filesaver>
+							<select name="view" id="view">
+								<option selected value="preview">Preview</option>
+								<option value="source">Source</option>
+							</select>
+						</div>
 					</div>
 					<iframe id="preview" class="content"></iframe>
 					<code

@@ -679,7 +679,6 @@ const externalMonacoPlugin = (
 				results.warnings.push(...subResults.warnings);
 				results.errors.push(...subResults.errors);
 				if (!results.metafile) return;
-				if (!subResults.metafile) return;
 				Object.assign(results.metafile.inputs, subResults.metafile.inputs);
 				Object.assign(results.metafile.outputs, subResults.metafile.outputs);
 			});
