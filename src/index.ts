@@ -7,6 +7,7 @@ import { OutputType } from "./markdown-it";
 import exampleMarkdown from "./examples/example.md.txt";
 import exampleCss from "./examples/example.css.txt";
 import WFilepicker from "./components/w-filepicker";
+import { Storage } from "./storage";
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion --
  * specified in index.html
@@ -56,6 +57,7 @@ class State {
 		if (src === this.#markdownSource) return;
 		this.#markdownSource = src;
 		$editor.setValue(src);
+		void Storage.markdownSource.setValue(src);
 		this.maybeRender();
 	}
 
@@ -67,6 +69,7 @@ class State {
 		if (this.#cssSource === src) return;
 		this.#cssSource = src;
 		$style.setValue(src);
+		void Storage.cssSource.setValue(src);
 		this.maybeRender();
 	}
 
@@ -93,6 +96,7 @@ class State {
 			const model = $editor.getModel();
 			if (model == null) return;
 			this.#markdownSource = model.getValue();
+			void Storage.markdownSource.setValue(this.#markdownSource);
 			this.#maxEditorLines = model.getLineCount();
 			this.maybeRender();
 			$editorPicker.file = null;
@@ -119,6 +123,7 @@ class State {
 			const model = $style.getModel();
 			if (model == null) return;
 			this.#cssSource = model.getValue();
+			void Storage.cssSource.setValue(this.#cssSource);
 			this.maybeRender();
 			$stylePicker.file = null;
 		});
@@ -193,24 +198,29 @@ class State {
 				save(blob, "wechat.html");
 			});
 
-		this.loadExamples();
+		void this.loadSources().then(this.maybeRender);
 
 		console.log("Initialized state!");
-
-		this.render();
 	}
 
-	loadExamples(): void {
-		void fetch(exampleMarkdown)
-			.then(async (r) => await r.text())
-			.then((source) => {
-				if (!this.markdownSource) this.markdownSource = source;
-			});
-		void fetch(exampleCss)
-			.then(async (r) => await r.text())
-			.then((source) => {
-				if (!this.cssSource) this.cssSource = source;
-			});
+	async loadSources() {
+		await Promise.all([
+			Storage.markdownSource.getValue().then(async (markdown) => {
+				if (markdown !== undefined) {
+					this.markdownSource = markdown;
+				} else {
+					this.markdownSource = await (await fetch(exampleMarkdown)).text();
+				}
+			}),
+
+			await Storage.cssSource.getValue().then(async (css) => {
+				if (css !== undefined) {
+					this.cssSource = css;
+				} else {
+					this.cssSource = await (await fetch(exampleCss)).text();
+				}
+			}),
+		]);
 	}
 
 	static RENDER_LIMIT_MS = 100;

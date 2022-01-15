@@ -13,7 +13,9 @@
   - provided by `marked`
 - [x] allow custom CSS to be used for styling
   - styles are inlined using `juice`
-- [ ] in-browser persistent storage
+- [x] in-browser persistent storage
+  - markdown and CSS sources are stored
+  - potentially restore layout and such?
 - [x] import/export of markdown/CSS/HTML files
   - [x] import is implemented with a load picker
   - [x] export is implemented with a file saver
@@ -28,3 +30,4 @@
     See https://github.com/chialab/rna/issues/38
   - [x] added a custom build step that resolves and copies assets properly
   - [x] add a custom build step based on [monaco-editor-webpack-plugin](https://github.com/microsoft/monaco-editor/tree/fc603de98e7dcd1ad6587ce3ad80431c567f9275/webpack-plugin) to reduce `monaco` code size
+- [ ] fix `javascript` hashing
