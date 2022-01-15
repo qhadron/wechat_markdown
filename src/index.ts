@@ -257,8 +257,9 @@ class State {
 				break;
 			}
 			case "source": {
-				$source.textContent = source;
-				void Editor.colorizeElement($source, {});
+				void Editor.colorize(source, "html", {}).then(
+					(colored) => ($source.innerHTML = colored)
+				);
 				break;
 			}
 		}

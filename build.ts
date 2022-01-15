@@ -817,7 +817,7 @@ const buildOptions: BuildOptions = {
 					"wordOperations",
 					"wordPartOperations",
 				],
-				["css", "markdown"],
+				["css", "markdown", "html"],
 				[
 					resolveAssetsPlugin(join(DIR_NAME, "assets"), {
 						".ttf": "fonts",

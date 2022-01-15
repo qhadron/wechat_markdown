@@ -15,5 +15,5 @@ export const Editor = {
 		return editor;
 	},
 	scrollType: monaco.editor.ScrollType,
-	colorizeElement: monaco.editor.colorizeElement,
+	colorize: monaco.editor.colorize,
 };
