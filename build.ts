@@ -9,6 +9,7 @@ import {
 	BuildResult,
 	ImportKind,
 	PluginBuild,
+	BuildIncremental,
 } from "esbuild";
 import {
 	cp,
@@ -84,6 +85,39 @@ function getLogger(name: string | BuildOptions | string[], color = clc.yellow) {
 function getFileHash(contents: string | Buffer | ArrayBuffer) {
 	return xxhash.h32(contents, 0x10ad1234).toString(32).slice(0, 8);
 }
+
+const mergeBuildResults = (
+	to: BuildResult | undefined,
+	from: BuildResult | undefined
+) => {
+	if (!to || !from) return;
+	if (to.stop) {
+		to.stop = () => {
+			to.stop?.();
+			from.stop?.();
+		};
+	}
+	to.errors.push(...from.errors);
+	to.warnings.push(...from.warnings);
+	if (to.rebuild) {
+		const rebuild = async () => {
+			const a = await to.rebuild?.();
+			const b = await from.rebuild?.();
+			mergeBuildResults(a, b);
+			return a as BuildIncremental;
+		};
+		rebuild.dispose = () => {
+			to.rebuild?.dispose();
+			from.rebuild?.dispose();
+		};
+		to.rebuild = rebuild;
+	}
+
+	if (to.outputFiles) to.outputFiles.push(...(from.outputFiles ?? []));
+
+	Object.assign(to.metafile?.inputs, from.metafile?.inputs);
+	Object.assign(to.metafile?.outputs, from.metafile?.outputs);
+};
 
 interface Plugin {
 	name: EsBuildPlugin["name"];
@@ -501,38 +535,47 @@ const externalMonacoPlugin = (
 		),
 		"vs/editor/editor.worker",
 	];
-	const resolveMonacoPath = (path: string) =>
-		`${DIR_NAME}/node_modules/${MONACO_INSTALL}/${path}${
-			path.endsWith(".js") ? "" : ".js"
-		}`;
 
 	/**
 	 * The main name needs to be passed from the real build to resolvers
 	 * (i.e. between 2 plugins), so this is the easiest way to do that.
 	 */
-	const deferredMainName: {
-		promise?: Promise<string>;
-		resolve?: (_: string) => void;
+	const deferredMainBuild: {
+		promise?: Promise<BuildResult>;
+		resolve?: (_: BuildResult) => void;
 	} = {};
 	// eslint-disable-next-line @typescript-eslint/promise-function-async
-	const mainName = (() => {
-		deferredMainName.promise = new Promise<string>((resolve) => {
-			deferredMainName.resolve = resolve;
+	const mainBuild = (() => {
+		deferredMainBuild.promise = new Promise<BuildResult>((resolve) => {
+			deferredMainBuild.resolve = resolve;
 		});
-		return deferredMainName.promise;
+		return deferredMainBuild.promise;
 	})();
 
 	return {
 		name: "external-monaco",
 		async setup(build) {
-			const log = getLogger("monaco-resolver");
+			const log = getLogger("monaco-resolver", clc.magenta);
+			const cache: Record<string, string> = {};
 			build.onResolve(
 				{ filter: /^:?monaco-editor(?:\/css)?/ },
 				async (args) => {
+					let resolvedPath;
 					const ext = args.path.endsWith("/css") ? "css" : "js";
-					const resolvedPath = `${buildOptions.publicPath ?? ""}/${dirname(
-						outPath
-					)}/${await mainName}.${ext}`;
+
+					if (!cache[ext]) {
+						const name = basename(
+							Object.keys((await mainBuild).metafile?.outputs ?? {}).find((x) =>
+								x.endsWith(ext)
+							) as string
+						);
+						resolvedPath = `${buildOptions.publicPath ?? ""}/${dirname(
+							outPath
+						)}/${name}`;
+						cache[ext] = resolvedPath;
+					}
+
+					resolvedPath = cache[ext];
 					log(`Resolved ${args.path} => ${resolvedPath}, ${args.kind}`);
 					return {
 						path: resolvedPath,
@@ -562,32 +605,32 @@ const externalMonacoPlugin = (
 				const mainFileContents = [
 					...featurePaths.map(generateImport),
 					`
-					import * as monaco from "vs/editor/editor.api";
-					declare global {
-						interface Window {
-							MonacoEnvironment: monaco.Environment;
+						import * as monaco from "vs/editor/editor.api";
+						declare global {
+							interface Window {
+								MonacoEnvironment: monaco.Environment;
+							}
 						}
-					}
 
-					self.MonacoEnvironment = {
-						getWorkerUrl: function (moduleId, label) {
-							${nonNull(
-								languages
-									.map((id) => languagesById[id])
-									.map((language) => {
-										if (!language.worker) return null;
-										return `
+						self.MonacoEnvironment = {
+							getWorkerUrl: function (moduleId, label) {
+								${nonNull(
+									languages
+										.map((id) => languagesById[id])
+										.map((language) => {
+											if (!language.worker) return null;
+											return `
 										if (label === "${language.label}") {
 											return "${publicPath}/${dirname(outPath)}/${language.worker.entry}.js";
 										}
-									`;
-									})
-							).join("\n")}
-							return "${publicPath}/assets/monaco/vs/editor/editor.worker.js";
-						},
-					};
-					export * from "vs/editor/editor.api";
-					`,
+										`;
+										})
+								).join("\n")}
+								return "${publicPath}/assets/monaco/vs/editor/editor.worker.js";
+							},
+						};
+						export * from "vs/editor/editor.api";
+						`,
 					...languagePaths.map(generateImport),
 				]
 					.join("\n")
@@ -595,20 +638,34 @@ const externalMonacoPlugin = (
 					.map((line) => line.trim())
 					.join("\n");
 
-				const hash = getFileHash(mainFileContents);
-
-				const entryName = `${entry}.${hash}`;
-
-				deferredMainName.resolve?.(`${entryName}`);
+				const entryName = `${entry}`;
 
 				const entryPoints = {
 					[entryName]: tempFile,
-					...Object.fromEntries(workerPaths.map((p) => [p, `worker:${p}`])),
 				};
+
+				// TODO: build with hash
+				// idea: store workers as [language, path] pairs, instead of workerPaths
+				// on output, reconstruct [language, hashed] from metafile
+				// then, use it to generate main file content
+				const workerBuild = build.esbuild.build({
+					...build.initialOptions,
+					entryPoints: workerPaths.map(
+						(entry) => `${MONACO_INSTALL}/${entry}.js`
+					),
+					bundle: true,
+					format: "iife",
+					outbase: "monaco-editor/esm/",
+					outdir,
+					metafile: true,
+					publicPath,
+					plugins: [loggerPlugin("monaco-workers")],
+				});
 
 				const subBuild = build.esbuild.build({
 					...build.initialOptions,
 					entryPoints,
+					entryNames: "[name].[hash]",
 					bundle: true,
 					format: "esm",
 					outdir,
@@ -645,13 +702,6 @@ const externalMonacoPlugin = (
 									}
 								);
 
-								build.onResolve({ filter: /^worker:/ }, (args) => {
-									const path = normalizePath(
-										resolveMonacoPath(args.path.substr(7))
-									);
-									return { path };
-								});
-
 								build.onLoad(
 									{ filter: /()/, namespace: "monaco-entry" },
 									() => {
@@ -671,16 +721,18 @@ const externalMonacoPlugin = (
 				});
 
 				const subResults = await subBuild;
+
+				deferredMainBuild.resolve?.(subResults);
+
+				const workerResults = await workerBuild;
+
+				mergeBuildResults(subResults, workerResults);
 				return subResults;
 			})();
 
 			build.onEnd(async (results) => {
 				const subResults = await subBuild;
-				results.warnings.push(...subResults.warnings);
-				results.errors.push(...subResults.errors);
-				if (!results.metafile) return;
-				Object.assign(results.metafile.inputs, subResults.metafile.inputs);
-				Object.assign(results.metafile.outputs, subResults.metafile.outputs);
+				mergeBuildResults(results, subResults);
 			});
 		},
 	};
